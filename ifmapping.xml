@@ -1,0 +1,69 @@
+using System.Xml;
+
+XmlWriterSettings settings = new XmlWriterSettings
+{
+    Indent = true,
+    IndentChars = "    ",
+    NewLineChars = "\n",
+    NewLineHandling = NewLineHandling.Replace
+};
+
+using (XmlReader reader = XmlReader.Create("input.xml"))
+using (XmlWriter writer = XmlWriter.Create("output.xml", settings))
+{
+    // Skip any whitespace or comments before the first IfAction element
+    while (reader.Read() && (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)) ;
+
+    while (reader.NodeType == XmlNodeType.Element && reader.Name == "IfAction")
+    {
+        // Write the ElseIfAction element
+        writer.WriteStartElement("ElseIfAction");
+
+        // Copy the firstOperand and secondOperand properties
+        writer.WriteStartElement("property");
+        writer.WriteAttributeString("name", "firstOperand");
+        writer.WriteValue(reader.GetAttribute("name"));
+        writer.WriteEndElement();
+
+        reader.ReadToNextSibling("property");
+        writer.WriteStartElement("property");
+        writer.WriteAttributeString("name", "secondOperand");
+        writer.WriteValue(reader.GetAttribute("name"));
+        writer.WriteEndElement();
+
+        // Write the IfAction.Then element
+        writer.WriteStartElement("ElseIfAction.Then");
+        reader.Read();
+
+        // Copy all child nodes until the next IfElseAction or ElseAction element
+        while (reader.NodeType != XmlNodeType.Element || (reader.Name != "IfElseAction" && reader.Name != "ElseAction"))
+        {
+            writer.WriteNode(reader, false);
+        }
+
+        writer.WriteEndElement(); // End ElseIfAction.Then
+        writer.WriteEndElement(); // End ElseIfAction
+
+        // Skip any whitespace or comments before the next IfAction element
+        while (reader.Read() && (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)) ;
+    }
+
+    if (reader.NodeType == XmlNodeType.Element && reader.Name == "ElseAction")
+    {
+        // Write the ElseAction element
+        writer.WriteStartElement("ElseAction");
+
+        // Write the ElseAction.Then element
+        writer.WriteStartElement("ElseAction.Then");
+        reader.Read();
+
+        // Copy all child nodes until the EndIfAction element
+        while (reader.NodeType != XmlNodeType.EndElement || reader.Name != "EndIfAction")
+        {
+            writer.WriteNode(reader, false);
+        }
+
+        writer.WriteEndElement(); // End ElseAction.Then
+        writer.WriteEndElement(); // End ElseAction
+    }
+}
