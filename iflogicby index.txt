@@ -1,0 +1,52 @@
+using System.Xml;
+
+// Load the input XML into a XmlDocument object
+XmlDocument xmlDoc = new XmlDocument();
+xmlDoc.LoadXml(inputXml);
+
+// Find all IfAction tags in the XML
+XmlNodeList ifActions = xmlDoc.SelectNodes("//IfAction");
+
+// Loop through each IfAction tag and process it
+foreach (XmlNode ifAction in ifActions)
+{
+    // Find the index of the current IfAction tag
+    int ifActionIndex = xmlDoc.InnerXml.IndexOf(ifAction.OuterXml);
+
+    // Find the next ElseAction or ElseIfAction tag after the current IfAction tag
+    int elseIndex = xmlDoc.InnerXml.IndexOf("<ElseAction>", ifActionIndex);
+    int elseIfIndex = xmlDoc.InnerXml.IndexOf("<ElseIfAction>", ifActionIndex);
+    int nextIndex = -1;
+
+    if (elseIndex != -1 && elseIfIndex != -1)
+    {
+        nextIndex = Math.Min(elseIndex, elseIfIndex);
+    }
+    else if (elseIndex != -1)
+    {
+        nextIndex = elseIndex;
+    }
+    else if (elseIfIndex != -1)
+    {
+        nextIndex = elseIfIndex;
+    }
+
+    // If no ElseAction or ElseIfAction tag is found after the current IfAction tag, assume the EndIfAction tag is the end of the IfAction block
+    if (nextIndex == -1)
+    {
+        nextIndex = xmlDoc.InnerXml.IndexOf("<EndIfAction>", ifActionIndex);
+    }
+
+    // Extract the current IfAction block and the block of the next tag after it
+    string currentBlock = xmlDoc.InnerXml.Substring(ifActionIndex, nextIndex - ifActionIndex);
+    string nextBlock = xmlDoc.InnerXml.Substring(nextIndex);
+
+    // Modify the current block according to the expected output format
+    // ...
+
+    // Replace the original IfAction block with the modified block in the input XML
+    xmlDoc.InnerXml = xmlDoc.InnerXml.Replace(currentBlock, modifiedBlock + nextBlock);
+}
+
+// Get the final output XML
+string outputXml = xmlDoc.InnerXml;
