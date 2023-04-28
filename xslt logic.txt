@@ -1,0 +1,11 @@
+<xsl:template match="your_current_element">
+  <xsl:variable name="nextElement" select="following-sibling::*[name() = 'name_you're_looking_for'][1]"/>
+  <xsl:choose>
+    <xsl:when test="$nextElement">
+      <!-- Do something with the nextElement variable -->
+    </xsl:when>
+    <xsl:otherwise>
+      <!-- Do something else if there is no nextElement -->
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
