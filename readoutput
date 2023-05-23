@@ -1,0 +1,47 @@
+Imports System.Diagnostics
+
+Module Module1
+    Sub Main()
+        ' Create a new process instance
+        Dim process As New Process()
+
+        ' Specify the command to be executed and any arguments
+        Dim command As String = "ping"
+        Dim arguments As String = "www.example.com"
+
+        ' Set up the process start info
+        Dim startInfo As New ProcessStartInfo()
+        startInfo.FileName = command
+        startInfo.Arguments = arguments
+        startInfo.RedirectStandardOutput = True
+        startInfo.UseShellExecute = False
+        startInfo.CreateNoWindow = True
+
+        process.StartInfo = startInfo
+
+        ' Set up the event handler for the DataReceived event
+        AddHandler process.OutputDataReceived, Sub(sender, e)
+                                                   ' Check if the output is not null
+                                                   If e.Data IsNot Nothing Then
+                                                       ' Process the output as needed
+                                                       Console.WriteLine(e.Data)
+
+                                                       ' Add your custom processing logic here
+                                                       ' ...
+
+                                                   End If
+                                               End Sub
+
+        ' Start the process
+        process.Start()
+
+        ' Begin asynchronous reading of the output
+        process.BeginOutputReadLine()
+
+        ' Wait for the process to finish
+        process.WaitForExit()
+
+        ' Close the process
+        process.Close()
+    End Sub
+End Module
