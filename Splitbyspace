@@ -1,0 +1,25 @@
+using System;
+using System.Text.RegularExpressions;
+
+class Program
+{
+    static void Main()
+    {
+        string input = "Hello \"world of programming\" and \"C#\"";
+
+        string[] result = SplitStringBySpace(input);
+
+        foreach (string item in result)
+        {
+            Console.WriteLine(item);
+        }
+    }
+
+    static string[] SplitStringBySpace(string input)
+    {
+        string pattern = @"\s(?=(?:[^""]*""[^""]*"")*[^""]*$)";
+        string[] result = Regex.Split(input, pattern);
+
+        return result;
+    }
+}
