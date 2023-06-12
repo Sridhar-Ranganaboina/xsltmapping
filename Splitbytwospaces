@@ -1,0 +1,30 @@
+using System;
+using System.Text.RegularExpressions;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        string text = "This is a sample \"text with spaces\" that needs splitting.";
+        string[] words = SplitStringBySpace(text);
+
+        foreach (string word in words)
+        {
+            Console.WriteLine(word);
+        }
+    }
+
+    static string[] SplitStringBySpace(string text)
+    {
+        string pattern = @"[^\s""]+|""([^""]*)""";
+        MatchCollection matches = Regex.Matches(text, pattern);
+
+        string[] words = new string[matches.Count];
+        for (int i = 0; i < matches.Count; i++)
+        {
+            words[i] = matches[i].Value;
+        }
+
+        return words;
+    }
+}
