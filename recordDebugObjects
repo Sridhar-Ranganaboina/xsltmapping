@@ -1,0 +1,68 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+
+public class DebugRecorder
+{
+    public static void RecordInputArguments()
+    {
+        var stackTrace = new StackTrace();
+        var frame = stackTrace.GetFrame(1); // Get the calling method's frame
+        var method = frame.GetMethod();
+
+        var argumentValues = new List<object>();
+
+        var parameters = method.GetParameters();
+        foreach (var parameter in parameters)
+        {
+            var argumentValue = frame.GetMethod().GetParameters()
+                .Select((p, i) => frame.GetMethod().GetParameters()[i].Name)
+                .FirstOrDefault() switch
+                {
+                    // Use reflection to get the argument value dynamically
+                    string parameterName => frame.GetMethod().Invoke(null, null)
+                        .GetType()
+                        .GetProperty(parameterName)
+                        .GetValue(frame.GetMethod().Invoke(null, null)),
+                    _ => null
+                };
+
+            argumentValues.Add(argumentValue);
+        }
+
+        // Store the argumentValues for later use in unit tests
+        // This could be writing to a file, saving to a database, etc.
+        // For simplicity, we'll just print them here
+        Console.WriteLine("Recorded input argument values:");
+        foreach (var value in argumentValues)
+        {
+            Console.WriteLine(value);
+        }
+    }
+}
+
+public class MyApplication
+{
+    public void MyMethod(string argument1, int argument2)
+    {
+        DebugRecorder.RecordInputArguments();
+        // Do something with the arguments...
+    }
+
+    public void AnotherMethod(double argument1, bool argument2, string argument3)
+    {
+        DebugRecorder.RecordInputArguments();
+        // Do something with the arguments...
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var myApp = new MyApplication();
+        myApp.MyMethod("hello", 42);
+        myApp.AnotherMethod(3.14, true, "world");
+    }
+}
