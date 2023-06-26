@@ -5,7 +5,7 @@ using System.Linq;
 
 public class DebugRecorder
 {
-    public static void RecordInputArguments(object instance)
+    public static void RecordInputArguments()
     {
         var stackTrace = new StackTrace();
         var frame = stackTrace.GetFrame(1); // Get the calling method's frame
@@ -17,15 +17,8 @@ public class DebugRecorder
         foreach (var parameter in parameters)
         {
             var argumentValue = frame.GetMethod().GetParameters()
-                .Select((p, i) => frame.GetMethod().GetParameters()[i].Name)
-                .FirstOrDefault() switch
-                {
-                    // Use reflection to get the argument value dynamically
-                    string parameterName => instance.GetType()
-                        .GetProperty(parameterName)
-                        .GetValue(instance),
-                    _ => null
-                };
+                .Select((p, i) => frame.GetMethod().GetParameters()[i])
+                .FirstOrDefault(p => p.Name == parameter.Name)?.DefaultValue;
 
             argumentValues.Add(argumentValue);
         }
@@ -45,13 +38,13 @@ public class MyApplication
 {
     public void MyMethod(string argument1, int argument2)
     {
-        DebugRecorder.RecordInputArguments(this);
+        DebugRecorder.RecordInputArguments();
         // Do something with the arguments...
     }
 
     public void AnotherMethod(double argument1, bool argument2, string argument3)
     {
-        DebugRecorder.RecordInputArguments(this);
+        DebugRecorder.RecordInputArguments();
         // Do something with the arguments...
     }
 }
