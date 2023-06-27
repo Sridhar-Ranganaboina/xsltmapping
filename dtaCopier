@@ -55,3 +55,54 @@ public void ProcessData_CopiesObjectData()
     Assert.AreEqual(originalData.Name, copiedData.Name);
     Assert.AreEqual(originalData.Age, copiedData.Age);
 }
+using System;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+
+public class MyClass
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+    
+    public MyClass(string name, int age)
+    {
+        Name = name;
+        Age = age;
+    }
+}
+
+public class MyService
+{
+    public void ProcessData(params object[] parameters)
+    {
+        // Copy parameter data dynamically
+        object[] copiedParameters = new object[parameters.Length];
+
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            copiedParameters[i] = CopyParameterValue(parameters[i]);
+        }
+
+        // Rest of the method logic...
+    }
+
+    private object CopyParameterValue(object parameter)
+    {
+        BinaryFormatter formatter = new BinaryFormatter();
+        MemoryStream memoryStream = new MemoryStream();
+
+        formatter.Serialize(memoryStream, parameter);
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        object copiedParameter = formatter.Deserialize(memoryStream);
+
+        return copiedParameter;
+    }
+}
+
+// Usage example
+MyClass myObject = new MyClass("John", 30);
+
+MyService service = new MyService();
+service.ProcessData(myObject);
