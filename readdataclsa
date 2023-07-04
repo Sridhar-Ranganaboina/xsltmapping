@@ -1,0 +1,49 @@
+Using connection As New SqlConnection(connectionString)
+    connection.Open()
+
+    Using command As New SqlCommand("GetTwoSelectObjects", connection)
+        command.CommandType = CommandType.StoredProcedure
+
+        Using reader As SqlDataReader = command.ExecuteReader()
+            ' Create SafeDataReader instance
+            Dim safeDataReader As New SafeDataReader(reader)
+
+            ' Read data from the first result set (Table1)
+            While safeDataReader.Read()
+                ' Read all columns dynamically
+                Dim dynamicData As IDictionary(Of String, Object) = New ExpandoObject()
+
+                For i As Integer = 0 To safeDataReader.FieldCount - 1
+                    Dim columnName As String = safeDataReader.GetName(i)
+                    Dim columnValue As Object = safeDataReader.GetValue(i)
+
+                    dynamicData(columnName) = columnValue
+                Next
+
+                ' Process the dynamic data from Table1
+                ' Access the values using dynamicData(columnName)
+                ' ...
+            End While
+
+            ' Move to the next result set (Table2)
+            safeDataReader.NextResult()
+
+            ' Read data from the second result set (Table2)
+            While safeDataReader.Read()
+                ' Read all columns dynamically
+                Dim dynamicData As IDictionary(Of String, Object) = New ExpandoObject()
+
+                For i As Integer = 0 To safeDataReader.FieldCount - 1
+                    Dim columnName As String = safeDataReader.GetName(i)
+                    Dim columnValue As Object = safeDataReader.GetValue(i)
+
+                    dynamicData(columnName) = columnValue
+                Next
+
+                ' Process the dynamic data from Table2
+                ' Access the values using dynamicData(columnName)
+                ' ...
+            End While
+        End Using
+    End Using
+End Using
