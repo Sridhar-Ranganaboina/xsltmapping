@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Repository Drop-down</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form>
+        <label for="repos">Select or Enter a Repository:</label>
+        <select id="repos" class="select2" style="width: 100%;">
+            {% for repo_name in repo_names %}
+            <option value="{{ repo_name }}">{{ repo_name }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <input type="text" id="new_repo_input" placeholder="Enter new repository name">
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                tags: true,
+                createTag: function(params) {
+                    return {
+                        id: params.term,
+                        text: params.term,
+                        newOption: true
+                    };
+                }
+            });
+
+            $('#repos').on('select2:select', function(e) {
+                if (e.params.data.newOption) {
+                    $('#repos').append(new Option(e.params.data.text, e.params.data.id, true, true)).trigger('change');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
