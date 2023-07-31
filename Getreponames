@@ -1,0 +1,23 @@
+
+
+import requests
+
+def get_repo_names(username, password, workspace):
+    base_url = f"https://api.bitbucket.org/2.0/repositories/{workspace}"
+    response = requests.get(base_url, auth=(username, password))
+
+    if response.status_code == 200:
+        data = response.json()
+        repo_names = [repo["name"] for repo in data["values"]]
+        return repo_names
+    else:
+        print(f"Failed to fetch repositories. Status code: {response.status_code}")
+        return []
+
+# Replace these variables with your Bitbucket credentials and workspace
+username = "your_bitbucket_username"
+password = "your_bitbucket_app_password"  # Generate an app password for security
+workspace = "your_bitbucket_workspace"
+
+repo_names = get_repo_names(username, password, workspace)
+print(repo_names)
