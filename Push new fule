@@ -1,0 +1,43 @@
+
+
+import requests
+import base64
+
+# Replace with your Bitbucket credentials and repository information
+username = 'YOUR_USERNAME'
+password = 'YOUR_PASSWORD'
+repository_owner = 'REPO_OWNER'
+repository_name = 'REPO_NAME'
+branch_name = 'TARGET_BRANCH'
+
+# Base URL for Bitbucket API
+base_url = f'https://api.bitbucket.org/2.0/repositories/{repository_owner}/{repository_name}'
+
+# File details
+file_content = 'Content of your new file.'
+file_path = 'path/to/your/newfile.txt'
+
+# API endpoint for creating a new commit
+create_commit_endpoint = f'{base_url}/src'
+
+# Authenticate using Basic Auth
+auth = (username, password)
+
+# Encode file content as base64
+encoded_content = base64.b64encode(file_content.encode()).decode()
+
+# Create a new commit to add the new file
+response = requests.put(
+    f'{create_commit_endpoint}/{branch_name}/{file_path}',
+    auth=auth,
+    json={
+        'message': 'Add a new file',
+        'content': encoded_content
+    }
+)
+
+if response.status_code == 201:
+    print("New file added successfully.")
+else:
+    print(f"Error: Unable to add new file. Status code: {response.status_code}")
+    print(response.text)
