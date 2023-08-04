@@ -1,0 +1,33 @@
+
+import requests
+
+# Replace these variables with your Bitbucket credentials and repository details
+USERNAME = 'your_bitbucket_username'
+APP_PASSWORD = 'your_app_password'
+REPO_OWNER = 'repository_owner'
+REPO_SLUG = 'repository_slug'
+NEW_BRANCH_NAME = 'new_branch_name'
+
+def create_new_branch():
+    url = f"https://api.bitbucket.org/2.0/repositories/{REPO_OWNER}/{REPO_SLUG}/refs/branches"
+    
+    headers = {
+        'Content-Type': 'application/json',
+    }
+
+    data = {
+        'name': NEW_BRANCH_NAME,
+        'target': {
+            'hash': 'default_branch_hash'  # Replace with the hash of the default branch
+        }
+    }
+
+    response = requests.post(url, auth=(USERNAME, APP_PASSWORD), headers=headers, json=data)
+    
+    if response.status_code == 201:
+        print(f"Successfully created branch {NEW_BRANCH_NAME}")
+    else:
+        print(f"Error: Failed to create branch - {response.status_code}")
+
+# Call the function to create a new branch
+create_new_branch()
