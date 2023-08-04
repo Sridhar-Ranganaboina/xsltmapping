@@ -1,0 +1,28 @@
+
+import requests
+
+# Replace these variables with your Bitbucket credentials and repository URL
+USERNAME = 'your_bitbucket_username'
+APP_PASSWORD = 'your_app_password'
+REPO_URL = 'https://api.bitbucket.org/2.0/repositories/your_team_name'
+
+def get_all_repos():
+    all_repo_names = []
+    url = f"{REPO_URL}/{USERNAME}"
+    while url:
+        response = requests.get(url, auth=(USERNAME, APP_PASSWORD))
+        if response.status_code == 200:
+            repos_data = response.json()
+            repo_names = [repo['name'] for repo in repos_data['values']]
+            all_repo_names.extend(repo_names)
+            url = repos_data.get('next', None)
+        else:
+            print(f"Error: Failed to fetch repositories - {response.status_code}")
+            break
+
+    return all_repo_names
+
+# Call the function to get all repository names
+all_repo_names = get_all_repos()
+print(all_repo_names)
+
