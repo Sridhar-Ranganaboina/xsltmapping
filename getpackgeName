@@ -1,0 +1,17 @@
+
+
+import os
+
+file_path = "c:/myfolder/packageName.1.0.1.nuget"
+
+# Extract file name without extension (package name and version)
+file_name = os.path.basename(file_path)
+file_name_without_extension = os.path.splitext(file_name)[0]
+
+# Split the file name into package name and version
+parts = file_name_without_extension.split('.')
+package_name = parts[0]
+version = '.'.join(parts[1:])
+
+print("Package Name:", package_name)
+print("Version:", version)
