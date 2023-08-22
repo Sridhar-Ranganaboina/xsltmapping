@@ -1,0 +1,30 @@
+
+pipeline {
+    agent any
+    stages {
+        stage('Example') {
+            steps {
+                script {
+                    // Load and parse Jules.yml (use appropriate methods)
+                    def julesYaml = loadJulesYaml()
+
+                    // Assuming "currentEnvironment" represents the currently selected environment
+                    def currentEnvironment = julesYaml.mapping.find { it.name == 'dev' }
+
+                    if (currentEnvironment) {
+                        // Access and set environment variables for the current environment
+                        currentEnvironment.Environments.each { envVar ->
+                            withEnv([envVar.name: envVar.value]) {
+                                // Within this block, you can access environment variables like DEV_VARIABLE, PROD_VARIABLE
+                                echo "Current Environment: ${envVar.name}"
+                                echo "Current Environment Value: ${envVar.value}"
+                            }
+                        }
+                    } else {
+                        echo "Current Environment not found."
+                    }
+                }
+            }
+        }
+    }
+}
