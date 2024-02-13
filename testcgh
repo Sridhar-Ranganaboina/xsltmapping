@@ -1,0 +1,40 @@
+Build Product Components:
+
+**Bitbucket Utility:**
+- **Objective:** Enhance Bitbucket Utility into an enterprise application capable of supporting all deployment requirements for UIPATH bots (Attended, Unattended, tech team developed bots, business team developed bots).
+- **Approach:**
+  - Strategically plan to rearchitect the solution for easy and quick adaptation to frequent changes.
+  - Establish infrastructure (VSI or AWS) for Bitbucket Utility to seamlessly handle user requests.
+  - Deliver the tool to a wider audience across the firm.
+  - Expand functionality to support Power Automate Deployments.
+
+**CI/CD:**
+- **Current State:** Currently utilizing VSI Jules pattern build for deploying UIPath bots. Muting the actual deployment stage in the pattern build, a custom stage has been created for bot deployments.
+- **Action Plan:**
+  - Schedule a call with the Jules team for a comprehensive review of the current approach. Revamp the design based on their inputs.
+  - Redesign CI/CD to accommodate Power Automate Bots.
+  - Integrate a feature for deploying reusable components.
+
+**Inventa Snippo/Visual Document Understanding Process:**
+- **Objective:** Enhance Inventa Snippo with the following features using Chat GPT or Gemini AI LLM models:
+  1. Export information from a scanned image or a scanned PDF on the fly, enabling business teams to utilize it seamlessly.
+  2. Export information from a scanned image or a scanned PDF as Swagger APIs, providing Tech teams with accessible APIs for applications or bots.
+  3. Generate dashboards or charts for analysis from scanned sources.
+
+**Bitbucket to Github Migration:**
+- **Objective:** Enhance Bitbucket Utility and CI/CD pipeline to support Bitbucket to Github migration.
+
+**Master Merge Tool:**
+- **Proposal:** Develop a master merge utility to automatically merge release branches into master post-deployment and completion of testing.
+
+**WinAutomation to UiPath Migration Tool:**
+- **Initiative:** Respond to requests to demonstrate the WinAutomation to UiPath Migrator utility. Explore opportunities to enhance its usability as a component.
+
+Enhance Innovation and Product Capabilities through Emerging Technologies:
+•	Objective: Drive innovation and expand product capabilities by actively building and collaborating with emerging technologies, particularly focusing on incorporating AI/ML skillsets.
+•	Approach:
+•	AI/ML Skillset Development: Commit to learning and acquiring proficiency in AI/ML technologies to bring cutting-edge capabilities to the development process.
+•	Strategic Partnerships: Foster partnerships with emerging tech entities to stay at the forefront of industry advancements.
+•	Tool/Solution Development: Undertake the creation of a robust tool or solution infused with AI/ML elements, ensuring its applicability to a broader audience.
+•	Skill Integration: Integrate newfound AI/ML skills into the development workflow for enhanced innovation.
+
