@@ -1,0 +1,41 @@
+
+
+import pandas as pd
+
+def flatten_json(json_data, prefix=''):
+    flattened = {}
+    for key, value in json_data.items():
+        new_key = f"{prefix}.{key}" if prefix else key
+        if isinstance(value, dict):
+            flattened.update(flatten_json(value, prefix=new_key))
+        else:
+            flattened[new_key] = value
+    return flattened
+
+def json_to_excel(json_data, excel_file):
+    flattened_data = [flatten_json(item) for item in json_data]
+    df = pd.DataFrame(flattened_data)
+    df.to_excel(excel_file, index=False)
+
+# Example JSON data
+json_data = [
+    {
+        "id": 1,
+        "name": "John",
+        "details": {
+            "age": 30,
+            "city": "New York"
+        }
+    },
+    {
+        "id": 2,
+        "name": "Alice",
+        "details": {
+            "age": 25,
+            "city": "Los Angeles"
+        }
+    }
+]
+
+# Convert JSON data to Excel
+json_to_excel(json_data, "output.xlsx")
