@@ -1,0 +1,55 @@
+
+Email Monitoring Service:
+
+Monitors incoming emails from specified shared mailboxes.
+Receives emails and forwards them to the Email Processing Microservice for further processing.
+Optionally, it could perform basic validation or filtering of incoming emails before forwarding them.
+Action Executor Microservice:
+
+Receives requests from the Email Processing Microservice to perform actions on emails, such as saving attachments, converting emails to PDF, moving emails to different folders, etc.
+Executes the requested actions on the emails based on the provided parameters.
+May involve interacting with external systems (e.g., SharePoint, Alteryx) to perform specific actions.
+Email Processing Microservice:
+
+Receives incoming emails forwarded by the Email Monitoring Service.
+Processes the incoming emails based on predefined rules or logic.
+Determines the actions to be performed on the emails and sends requests to the Action Executor Microservice accordingly.
+Optionally, sends notifications to email senders or other stakeholders based on the processing results.
+
+
+EmailServices/
+│
+├── app.py                  # Main application file
+├── requirements.txt        # List of dependencies
+│
+├── development/            # Development environment
+│   ├── Dockerfile          # Dockerfile for development environment
+│   └── config.yaml         # Configuration file for development environment
+│
+├── staging/                # Staging environment
+│   ├── Dockerfile          # Dockerfile for staging environment
+│   └── config.yaml         # Configuration file for staging environment
+│
+├── production/             # Production environment
+│   ├── Dockerfile          # Dockerfile for production environment
+│   └── config.yaml         # Configuration file for production environment
+│
+├── services/               # Main services folder
+│   ├── email_services/     # Folder for email-related services
+│   │   ├── __init__.py
+│   │   ├── email_monitoring_client.py      # Client for Email Monitoring Microservice
+│   │   ├── action_executor_client.py       # Client for Action Executor Microservice
+│   │   └── email_processing_client.py     # Client for Email Processing Microservice
+│   │
+│   └── file_watcher_services/   # Folder for file watcher-related services
+│       ├── __init__.py
+│       ├── file_watcher.py         # Logic for file watching functionality
+│       └── ...
+│
+└── utils/                  # Folder containing utility functions
+    ├── __init__.py
+    ├── aggregator.py       # Aggregator logic for combining data from microservices
+    ├── authentication.py   # Authentication utilities
+    ├── error_handling.py   # Error handling utilities
+    ├── logging_config.py   # Logging configuration
+    └── ...
