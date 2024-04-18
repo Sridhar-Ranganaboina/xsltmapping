@@ -1,0 +1,26 @@
+import win32serviceutil
+import win32service
+import win32event
+import servicemanager
+import socket
+import threading
+import your_flask_app  # Import your Flask app module here
+
+class FlaskService(win32serviceutil.ServiceFramework):
+    _svc_name_ = "MyFlaskService"
+    _svc_display_name_ = "My Flask Service"
+    _svc_description_ = "This is a Windows service hosting a Flask application."
+
+    def __init__(self, args):
+        win32serviceutil.ServiceFramework.__init__(self, args)
+        self.stop_event = threading.Event()
+
+    def SvcDoRun(self):
+        your_flask_app.run_flask_app()  # Start your Flask app
+
+    def SvcStop(self):
+        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+        self.stop_event.set()
+
+if __name__ == '__main__':
+    win32serviceutil.HandleCommandLine(FlaskService)
