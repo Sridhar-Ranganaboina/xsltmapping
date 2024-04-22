@@ -1,0 +1,35 @@
+from flask import Flask, request
+import exchangelib
+from impacket import smbconnection
+
+app = Flask(__name__)
+
+# ... (Other application logic)
+
+def download_attachments_to_shared_drive(email_item, unc_path):
+  if email_item.has_attachments:
+    for attachment in email_item.attachments:
+      try:
+        # Extract username and password from user input (NOT RECOMMENDED FOR PRODUCTION)
+        USERNAME = request.args.get('username')
+        PASSWORD = request.args.get('password')
+
+        # Connect to shared drive using UNC path and credentials
+        conn = smbconnection.SMBConnection(*unc_path.split("\\")[2:], USERNAME, PASSWORD, use_ntlm_v2=True)
+        conn.connect()
+
+        # Create the folder structure on the shared drive if it doesn't exist (optional)
+        folder_path = "/".join(unc_path.split("\\")[3:])  # Assuming UNC path format \\server\share\folder\subfolder
+        conn.create_directory(os.path.dirname(folder_path))  # Replace os.path with pathlib for Python 3
+
+        attachment_content = attachment.get_content()
+
+        # Save the attachment
+        conn.storeFile(folder_path + "/" + attachment.name, attachment_content)
+
+        conn.close()
+        print(f"Attachment saved to: {unc_path}/{attachment.name}")
+      except Exception as e:
+        print(f"Error downloading attachment to shared drive: {e}")
+  else:
+    print("Email has no attachments")
