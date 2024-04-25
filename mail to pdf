@@ -1,0 +1,56 @@
+import pdfkit
+import re
+from exchangelib import Account, Credentials, Configuration, DELEGATE
+
+# Define your Exchange credentials
+credentials = Credentials(username='your_email@example.com', password='your_password')
+
+# Define your Exchange server configuration
+config = Configuration(server='your_exchange_server', credentials=credentials)
+
+# Create an Account object
+account = Account(primary_smtp_address='your_email@example.com', config=config, autodiscover=False, access_type=DELEGATE)
+
+# Retrieve the email
+email = account.inbox.get(subject='Your email subject')
+
+# Extract relevant content from the email (e.g., subject, sender, recipient, and body)
+subject = email.subject
+sender = email.sender.email_address
+recipients = ', '.join([r.email_address for r in email.to_recipients])
+body = email.text_body if email.body.is_body_type('Text') else email.body  # Use text body if HTML body is not available
+
+# Create HTML content for the PDF
+html_content = f'''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{subject}</title>
+</head>
+<body>
+  <h1>{subject}</h1>
+  <p><strong>From:</strong> {sender}</p>
+  <p><strong>To:</strong> {recipients}</p>
+  <hr>
+  <div>{body}</div>
+</body>
+</html>
+'''
+
+# Create a valid file name from the subject
+file_name = re.sub(r'[^\w\-_. ]', '_', subject) + '.pdf'
+
+# Save the HTML content to a temporary file
+html_file_path = 'email_content.html'
+with open(html_file_path, 'w', encoding='utf-8') as file:
+    file.write(html_content)
+
+# Convert HTML to PDF using pdfkit
+pdfkit.from_file(html_file_path, file_name)
+
+# Cleanup: Delete the temporary HTML file
+import os
+os.remove(html_file_path)
+
+print(f'Email saved as PDF: {file_name}')
