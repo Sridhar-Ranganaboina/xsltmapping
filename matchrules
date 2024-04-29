@@ -1,0 +1,88 @@
+import re
+from exchangelib import Account, Credentials, DELEGATE
+from exchangelib import Message, FileAttachment
+from enum import Enum
+
+class MatchRuleType(Enum):
+    STARTS_WITH = 'starts_with'
+    ENDS_WITH = 'ends_with'
+    EQUALS = 'equals'
+    CONTAINS = 'contains'
+    REGEX = 'regex'
+
+class FieldType(Enum):
+    SUBJECT = 'subject'
+    BODY = 'body'
+    SENDER = 'sender'
+    RECIPIENTS = 'recipients'
+    ATTACHMENTS = 'attachments'
+
+class MatchRule:
+    def __init__(self, rule_type, value):
+        self.rule_type = rule_type
+        self.value = value
+
+    def apply(self, field):
+        if self.rule_type == MatchRuleType.STARTS_WITH:
+            return field.startswith(self.value)
+        elif self.rule_type == MatchRuleType.ENDS_WITH:
+            return field.endswith(self.value)
+        elif self.rule_type == MatchRuleType.EQUALS:
+            return field == self.value
+        elif self.rule_type == MatchRuleType.CONTAINS:
+            return self.value in field
+        elif self.rule_type == MatchRuleType.REGEX:
+            return bool(re.search(self.value, field))
+        else:
+            raise ValueError("Invalid rule type")
+
+class EmailItem:
+    def __init__(self, subject, body, sender, recipients, attachments):
+        self.subject = subject
+        self.body = body
+        self.sender = sender
+        self.recipients = recipients
+        self.attachments = attachments
+
+    def match_rule(self, field_type, rule):
+        field = getattr(self, field_type.value)
+        if field_type == FieldType.RECIPIENTS:
+            return any(rule.apply(recipient) for recipient in field)
+        elif field_type == FieldType.ATTACHMENTS:
+            return any(rule.apply(attachment) for attachment in field)
+        else:
+            return rule.apply(field)
+
+# Define your Exchange credentials
+email_address = 'your_email@example.com'
+password = 'your_password'
+
+# Connect to Exchange Server
+credentials = Credentials(username=email_address, password=password)
+account = Account(primary_smtp_address=email_address, credentials=credentials, autodiscover=True, access_type=DELEGATE)
+
+# Fetch an example email item
+inbox = account.inbox
+emails = inbox.all().order_by('-datetime_received')[:1]  # Fetch the latest email
+for email in emails:
+    subject = email.subject
+    body = email.text_body
+    sender = email.sender.email_address
+    recipients = [recipient.email_address for recipient in email.to_recipients]
+    attachments = [attachment.name for attachment in email.attachments if isinstance(attachment, FileAttachment)]
+    email_item = EmailItem(subject, body, sender, recipients, attachments)
+
+# Define match rules
+rules = [
+    (FieldType.SUBJECT, MatchRule(MatchRuleType.CONTAINS, 'Meeting')),
+    (FieldType.SENDER, MatchRule(MatchRuleType.EQUALS, 'boss@example.com')),
+    (FieldType.BODY, MatchRule(MatchRuleType.REGEX, r'\b(?:[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b)')),
+    (FieldType.ATTACHMENTS, MatchRule(MatchRuleType.ENDS_WITH, '.docx'))
+]
+
+# Apply rules and print results
+for field_type, rule in rules:
+    print(f"Rule: {rule.rule_type.value} {rule.value}")
+    print("Field type:", field_type.value)
+    print("Match result:", email_item.match_rule(field_type, rule))
+    print()
