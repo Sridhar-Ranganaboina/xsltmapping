@@ -1,0 +1,45 @@
+from exchangelib import Account, Credentials, Configuration, DELEGATE, Folder
+
+# Function to create folders recursively
+def create_folder(account, parent_folder, folder_path):
+    # Split folder_path into folder names
+    folder_names = folder_path.split(" / ")
+    for folder_name in folder_names:
+        # Remove single quotes if present
+        folder_name = folder_name.strip("'")
+        # Check if the folder already exists
+        existing_folder = parent_folder / folder_name
+        if not existing_folder.exists():
+            new_folder = Folder(parent_folder=parent_folder, name=folder_name)
+            new_folder.save()
+            print(f"Folder '{folder_name}' created successfully.")
+            parent_folder = new_folder  # Update parent_folder to the new folder
+        else:
+            parent_folder = existing_folder
+    return parent_folder
+
+# Assuming you already have the necessary credentials and configuration set up
+credentials = Credentials('username', 'password')
+config = Configuration(server='mail.example.com', credentials=credentials)
+
+# Initialize the account
+account = Account(primary_smtp_address='user@example.com', config=config,
+                  autodiscover=False, access_type=DELEGATE)
+
+# Define the folder string
+folder_string = "account.inbox / 'Processed' / 'sub folder'"
+
+# Parse the folder string
+folder_parts = folder_string.split(" / ")
+parent_folder_path = folder_parts[0]
+subfolders = folder_parts[1:]
+
+# Get the parent folder
+parent_folder = account.inbox
+parent_folder = create_folder(account, parent_folder, parent_folder_path)
+
+# Create subfolders recursively
+for folder in subfolders:
+    parent_folder = create_folder(account, parent_folder, folder)
+
+print("Final folder instance:", parent_folder)
