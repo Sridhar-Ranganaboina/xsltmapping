@@ -1,0 +1,24 @@
+Private Sub Worksheet_Change(ByVal Target As Range)
+    Dim Oldvalue As String
+    Dim Newvalue As String
+    Application.EnableEvents = True
+    On Error GoTo Exitsub
+    If Target.Address = "$A$1" Then
+        If Target.SpecialCells(xlCellTypeAllValidation) Is Nothing Then
+            GoTo Exitsub
+        Else: If Target.Value = "" Then GoTo Exitsub Else
+            Application.EnableEvents = False
+            Newvalue = Target.Value
+            Application.Undo
+            Oldvalue = Target.Value
+            Target.Value = Newvalue
+            If Oldvalue = "" Then
+                'do nothing
+            Else
+                Target.Value = Oldvalue & ", " & Newvalue
+            End If
+        End If
+    End If
+Exitsub:
+    Application.EnableEvents = True
+End Sub
