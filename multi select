@@ -1,24 +1,33 @@
 Private Sub Worksheet_Change(ByVal Target As Range)
     Dim Oldvalue As String
     Dim Newvalue As String
-    Application.EnableEvents = True
+    Dim rng As Range
+
+    'Specify the range you want to apply the multi-select functionality
+    Set rng = Me.Range("B:B")
+
     On Error GoTo Exitsub
-    If Target.Address = "$A$1" Then
+    If Not Intersect(Target, rng) Is Nothing Then
         If Target.SpecialCells(xlCellTypeAllValidation) Is Nothing Then
             GoTo Exitsub
-        Else: If Target.Value = "" Then GoTo Exitsub Else
+        Else
+            If Target.Value = "" Then GoTo Exitsub Else
             Application.EnableEvents = False
             Newvalue = Target.Value
             Application.Undo
             Oldvalue = Target.Value
-            Target.Value = Newvalue
             If Oldvalue = "" Then
-                'do nothing
+                Target.Value = Newvalue
             Else
-                Target.Value = Oldvalue & ", " & Newvalue
+                If InStr(1, Oldvalue, Newvalue) = 0 Then
+                    Target.Value = Oldvalue & ", " & Newvalue
+                Else:
+                    Target.Value = Oldvalue
+                End If
             End If
         End If
     End If
+
 Exitsub:
     Application.EnableEvents = True
 End Sub
