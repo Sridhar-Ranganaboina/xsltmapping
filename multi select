@@ -1,28 +1,37 @@
-Private Sub Worksheet_Change(ByVal Target As Range)
+Private Sub Workbook_SheetChange(ByVal Sh As Object, ByVal Target As Range)
     Dim Oldvalue As String
     Dim Newvalue As String
     Dim rng As Range
+    Dim ws As Worksheet
 
-    'Specify the range you want to apply the multi-select functionality
-    Set rng = Me.Range("B:B")
+    'Specify the sheets and their corresponding columns where you want to apply the multi-select functionality
+    Dim columnMapping As Object
+    Set columnMapping = CreateObject("Scripting.Dictionary")
+    columnMapping("Sheet1") = "B"
+    columnMapping("Sheet2") = "B:C" ' Specify multiple columns separated by colon if needed
 
     On Error GoTo Exitsub
-    If Not Intersect(Target, rng) Is Nothing Then
-        If Target.SpecialCells(xlCellTypeAllValidation) Is Nothing Then
-            GoTo Exitsub
-        Else
-            If Target.Value = "" Then GoTo Exitsub Else
-            Application.EnableEvents = False
-            Newvalue = Target.Value
-            Application.Undo
-            Oldvalue = Target.Value
-            If Oldvalue = "" Then
-                Target.Value = Newvalue
+
+    'Check if the current sheet is in the column mapping and the changed cell is within the specified range
+    If columnMapping.Exists(Sh.Name) Then
+        Set rng = Sh.Columns(columnMapping(Sh.Name))
+        If Not Intersect(Target, rng) Is Nothing Then
+            If Target.SpecialCells(xlCellTypeAllValidation) Is Nothing Then
+                GoTo Exitsub
             Else
-                If InStr(1, Oldvalue, Newvalue) = 0 Then
-                    Target.Value = Oldvalue & ", " & Newvalue
-                Else:
-                    Target.Value = Oldvalue
+                If Target.Value = "" Then GoTo Exitsub Else
+                Application.EnableEvents = False
+                Newvalue = Target.Value
+                Application.Undo
+                Oldvalue = Target.Value
+                If Oldvalue = "" Then
+                    Target.Value = Newvalue
+                Else
+                    If InStr(1, Oldvalue, Newvalue) = 0 Then
+                        Target.Value = Oldvalue & ", " & Newvalue
+                    Else:
+                        Target.Value = Oldvalue
+                    End If
                 End If
             End If
         End If
