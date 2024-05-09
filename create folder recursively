@@ -1,0 +1,73 @@
+def create_folder_structure(account, folder_path):
+  """
+  Creates folders and subfolders recursively within the Exchange account.
+
+  Args:
+      account (exchangelib.Account): The Exchange account object.
+      folder_path (str): The path of the folder structure to create.
+  """
+  folder_names = folder_path.split("/")
+
+  # Start with the root folder
+  current_folder = account.root
+  for folder_name in folder_names:
+    existing_folder = check_folder_exists(account, current_folder.path + "/" + folder_name)
+    if not existing_folder:
+      # Create the subfolder if it doesn't exist
+      current_folder = create_subfolder(current_folder, folder_name)
+      if not current_folder:
+        # Stop if folder creation fails
+        return
+    else:
+      # Move to the existing subfolder
+      current_folder = existing_folder
+
+# Example usage
+account = # Your Exchange account object
+folder_path = "inbox/processed/reports"
+
+create_folder_structure(account, folder_path)
+
+
+def create_subfolder(parent_folder, folder_name):
+  """
+  Creates a subfolder within the provided parent folder.
+
+  Args:
+      parent_folder (exchangelib.Folder): The parent folder object.
+      folder_name (str): The name of the subfolder to create.
+
+  Returns:
+      exchangelib.Folder: The newly created subfolder object or None on error.
+  """
+  try:
+    new_folder = parent_folder.create_folder(folder_name)
+    print(f"Folder created: {new_folder.name}")
+    return new_folder
+  except Exception as e:
+    print(f"Error creating folder: {e}")
+    return None
+
+
+from exchangelib.folders import SingleFolderQuerySet
+
+def check_folder_exists(account, folder_path):
+  """
+  Checks if a folder exists by path within the Exchange account.
+
+  Args:
+      account (exchangelib.Account): The Exchange account object.
+      folder_path (str): The path of the folder to check (e.g., "inbox/processed").
+
+  Returns:
+      exchangelib.Folder: The found folder object or None if not found.
+  """
+  folder_names = folder_path.split("/")
+
+  current_folder = account.root
+  for folder_name in folder_names:
+    folder_queryset = SingleFolderQuerySet(account=account, folder=current_folder)
+    current_folder = folder_queryset.get(name=folder_name)
+    if not current_folder:
+      return None
+  return current_folder
