@@ -1,0 +1,78 @@
+import servicemanager
+import win32event
+import win32service
+import win32serviceutil
+import logging
+import json
+import portalocker
+from exchangelib import Credentials, Account, DELEGATE, Configuration
+
+class MailListenerService(win32serviceutil.ServiceFramework):
+    _svc_name_ = "MailListenerService"
+    _svc_display_name_ = "Mail Listener Service"
+    _svc_description_ = "Listens for new mail and logs mail item details."
+
+    def __init__(self, args):
+        win32serviceutil.ServiceFramework.__init__(self, args)
+        self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
+        self.logger = self._get_logger()
+        self._keep_running = True
+        self.json_file_path = 'C:\\mail_items.json'
+
+    def _get_logger(self):
+        logger = logging.getLogger('[MailListenerService]')
+        handler = logging.FileHandler('C:\\MailListenerService.log')
+        formatter = logging.Formatter('%(asctime)s %(levelname)-7.7s %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+        return logger
+
+    def SvcStop(self):
+        self.logger.info('Service is stopping...')
+        self._keep_running = False
+        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+        win32event.SetEvent(self.hWaitStop)
+
+    def SvcDoRun(self):
+        self.logger.info('Service is starting...')
+        self.main()
+
+    def main(self):
+        credentials = Credentials('your_email@example.com', 'your_password')
+        config = Configuration(server='outlook.office365.com', credentials=credentials)
+        account = Account(primary_smtp_address='your_email@example.com', config=config, autodiscover=False, access_type=DELEGATE)
+
+        def on_new_mail(item):
+            self.logger.info(f'New mail received: {item.subject}')
+            mail_item = {
+                'item_id': item.id,
+                'change_key': item.changekey,
+                'mail_id': item.message_id
+            }
+            self.store_mail_item(mail_item)
+
+        while self._keep_running:
+            for item in account.inbox.filter(is_read=False):
+                on_new_mail(item)
+            win32event.WaitForSingleObject(self.hWaitStop, 60000)  # Check every minute
+
+    def store_mail_item(self, mail_item):
+        with portalocker.Lock(self.json_file_path, 'r+') as file:
+            try:
+                data = json.load(file)
+            except json.JSONDecodeError:
+                data = []
+            data.append(mail_item)
+            file.seek(0)
+            json.dump(data, file, indent=4)
+            file.truncate()
+        self.logger.info(f'Stored mail item: {mail_item}')
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        servicemanager.Initialize()
+        servicemanager.PrepareToHostSingle(MailListenerService)
+        servicemanager.StartServiceCtrlDispatcher()
+    else:
+        win32serviceutil.HandleCommandLine(MailListenerService)
