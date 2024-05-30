@@ -1,0 +1,66 @@
+Setup Database
+====================================================
+import sqlite3
+
+def setup_database():
+    conn = sqlite3.connect('item_queue.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS item_queue (
+            id TEXT PRIMARY KEY,
+            changekey TEXT NOT NULL,
+            mail_box TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+setup_database()
+
+=======================================
+writer service
+================================================
+import sqlite3
+
+def write_to_queue(item_id, changekey, mail_box):
+    conn = sqlite3.connect('item_queue.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO item_queue (id, changekey, mail_box) VALUES (?, ?, ?)', (item_id, changekey, mail_box))
+    conn.commit()
+    conn.close()
+    print(f"Inserted item ID {item_id} into the queue")
+
+# Example usage
+write_to_queue('id123', 'key123', 'mailbox123')
+====================================================================
+
+import sqlite3
+import time
+
+def read_from_queue():
+    while True:
+        try:
+            # Establish a new connection
+            conn = sqlite3.connect('item_queue.db')
+            c = conn.cursor()
+            while True:
+                c.execute('SELECT id, changekey, mail_box FROM item_queue ORDER BY ROWID ASC LIMIT 1')
+                row = c.fetchone()
+                if row:
+                    item_id, changekey, mail_box = row
+                    print(f"Processing item ID {item_id}, changekey {changekey}, mail_box {mail_box}")
+                    c.execute('DELETE FROM item_queue WHERE id = ?', (item_id,))
+                    conn.commit()
+                else:
+                    print("Queue is empty, waiting for new items")
+                    time.sleep(5)
+            conn.close()
+        except sqlite3.DatabaseError as e:
+            print(f"Database error: {e}")
+            time.sleep(5)  # Wait before retrying
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            time.sleep(5)  # Wait before retrying
+
+# Example usage
+read_from_queue()
