@@ -1,0 +1,49 @@
+from smb.SMBConnection import SMBConnection
+from smb.smb_structs import OperationFailure
+
+# Replace these variables with your own settings
+server_name = "your_server_name"
+share_name = "your_share_name"
+username = "your_username"
+password = "your_password"
+domain = "your_domain"
+server_ip = "your_server_ip"
+client_machine_name = "your_client_machine_name"
+
+# Example multilevel directory path from the client
+multilevel_directory_path = "level1/level2/level3"
+
+# Establish a connection to the server
+conn = SMBConnection(username, password, client_machine_name, server_name, domain=domain, use_ntlm_v2=True)
+assert conn.connect(server_ip, 139)
+
+def directory_exists(share, directory):
+    try:
+        conn.listPath(share, directory)
+        return True
+    except OperationFailure as e:
+        if 'STATUS_OBJECT_NAME_NOT_FOUND' in str(e):
+            return False
+        else:
+            raise e
+
+def create_directory(share, directory):
+    conn.createDirectory(share, directory)
+
+def create_multilevel_directories(share, path):
+    directories = path.split('/')
+    current_path = ""
+    for directory in directories:
+        if current_path:
+            current_path = f"{current_path}/{directory}"
+        else:
+            current_path = directory
+        
+        if not directory_exists(share, current_path):
+            create_directory(share, current_path)
+
+# Create the multilevel directories based on client input
+create_multilevel_directories(share_name, multilevel_directory_path)
+
+# Close the connection
+conn.close()
