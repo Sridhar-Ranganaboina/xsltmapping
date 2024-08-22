@@ -1,0 +1,44 @@
+spinnakerApplication: eddi-uploader-s3-trigger
+mapping:
+  - branchType: feature
+    pipeline:
+      - name: dev-lambda1
+        env: dev
+        parameters:
+          - awsRegion: us-east-1
+          - awsAccount: 123
+          - functionName: app-eddi-uploader-s3-trigger-lambda1
+      - name: dev-lambda2
+        env: dev
+        parameters:
+          - awsRegion: us-east-1
+          - awsAccount: 123
+          - functionName: app-eddi-uploader-s3-trigger-lambda2
+  - branchType: develop
+    pipeline:
+      - name: test-lambda1
+        env: test
+        parameters:
+          - awsRegion: us-east-1
+          - awsAccount: 123
+          - functionName: app-eddi-uploader-s3-trigger-lambda1
+      - name: test-lambda2
+        env: test
+        parameters:
+          - awsRegion: us-east-1
+          - awsAccount: 123
+          - functionName: app-eddi-uploader-s3-trigger-lambda2
+  - branchType: master
+    pipeline:
+      - name: prod-lambda1
+        env: prod
+        parameters:
+          - awsRegion: us-east-1
+          - awsAccount: 123
+          - functionName: app-eddi-uploader-s3-trigger-lambda1
+      - name: prod-lambda2
+        env: prod
+        parameters:
+          - awsRegion: us-east-1
+          - awsAccount: 123
+          - functionName: app-eddi-uploader-s3-trigger-lambda2
