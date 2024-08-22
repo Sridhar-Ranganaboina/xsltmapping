@@ -1,0 +1,67 @@
+stages:
+  - requisiteStageRefIds: []
+    name: JET Preflight
+    refId: jet-preflight
+    type: jetPreflight
+  - requisiteStageRefIds:
+      - jet-preflight
+    name: Onboard Deployment Target (Function 1)
+    refId: onboard-deployment-target-1
+    type: jetDeploymentTargetOnboarding
+    platform: LAMBDA
+    awsRegion: ${parameters.awsRegion}
+    environment: DEV
+    awsAccount: ${parameters.awsAccount}
+    functionName: ${parameters.functionName1}
+    artifactRef: ${parameters['artifactRef']}
+  - requisiteStageRefIds:
+      - jet-preflight
+    name: Onboard Deployment Target (Function 2)
+    refId: onboard-deployment-target-2
+    type: jetDeploymentTargetOnboarding
+    platform: LAMBDA
+    awsRegion: ${parameters.awsRegion}
+    environment: DEV
+    awsAccount: ${parameters.awsAccount}
+    functionName: ${parameters.functionName2}
+    artifactRef: ${parameters['artifactRef']}
+
+  # Update Lambda for Function 1
+  - requisiteStageRefIds:
+      - onboard-deployment-target-1
+    name: Update Lambda (Function 1)
+    refId: update-lambda-1
+    type: Aws.UpdateLambdaUsingLambdaDeployer
+    account: ${stageByRefId("onboard-deployment-target-1")["context"]["accountName"]}
+    functionName: ${parameters.functionName1}
+    publish: true
+
+  # Update Lambda for Function 2
+  - requisiteStageRefIds:
+      - onboard-deployment-target-2
+    name: Update Lambda (Function 2)
+    refId: update-lambda-2
+    type: Aws.UpdateLambdaUsingLambdaDeployer
+    account: ${stageByRefId("onboard-deployment-target-2")["context"]["accountName"]}
+    functionName: ${parameters.functionName2}
+    publish: true
+
+  # Update Alias for Function 1
+  - requisiteStageRefIds:
+      - update-lambda-1
+    name: Update Alias (Function 1)
+    refId: update-alias-1
+    type: Aws.UpdateLambdaAlias
+    functionAlias: live
+    functionName: ${parameters.functionName1}
+    version: ${stageByRefId("update-lambda-1")["context"]["publishedVersion"]}
+
+  # Update Alias for Function 2
+  - requisiteStageRefIds:
+      - update-lambda-2
+    name: Update Alias (Function 2)
+    refId: update-alias-2
+    type: Aws.UpdateLambdaAlias
+    functionAlias: live
+    functionName: ${parameters.functionName2}
+    version: ${stageByRefId("update-lambda-2")["context"]["publishedVersion"]}
