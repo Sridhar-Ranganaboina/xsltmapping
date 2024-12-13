@@ -28,6 +28,12 @@ namespace OnBoard.Apps.TagHelpers
         [HtmlAttributeName("search-type")]
         public string? SearchType { get; set; }
 
+        /// <summary>
+        /// The orientation of the layout (horizontal or vertical).
+        /// </summary>
+        [HtmlAttributeName("orientation")]
+        public string Orientation { get; set; } = "vertical";
+
         public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
             try
@@ -39,29 +45,36 @@ namespace OnBoard.Apps.TagHelpers
                     throw new ArgumentException("Invalid or missing SearchType.");
                 }
 
+                // Determine orientation styles
+                string containerStyle = Orientation == "horizontal" ? "display: flex; gap: 15px; align-items: center;" : "display: block;";
+                string labelStyle = Orientation == "horizontal" ? "margin-right: 10px;" : "display: block; margin-bottom: 5px;";
+
                 // Render a dropdown for search type
-                string dropdownHtml = "<label for='searchTypeDropdown'>Search Type:</label>" +
-                                      "<select id='searchTypeDropdown' name='searchType' onchange='updateDatePickers()' style='margin-bottom: 10px; display: block;'>" +
-                                      "<option value='equals'" + (SearchType == "equals" ? " selected" : "") + ">Equals</option>" +
-                                      "<option value='not-equals'" + (SearchType == "not-equals" ? " selected" : "") + ">Not Equal To</option>" +
-                                      "<option value='greater-than'" + (SearchType == "greater-than" ? " selected" : "") + ">Greater Than</option>" +
-                                      "<option value='less-than'" + (SearchType == "less-than" ? " selected" : "") + ">Less Than</option>" +
-                                      "<option value='in-between'" + (SearchType == "in-between" ? " selected" : "") + ">In Between</option>" +
-                                      "</select>";
+                string dropdownHtml = $" +
+                    $""<label for='searchTypeDropdown' style='{labelStyle}'>Search Type:</label>" +
+                    "<select id='searchTypeDropdown' name='searchType' onchange='updateDatePickers()' style='margin-bottom: 10px; display: block;'>" +
+                    "<option value='equals'" + (SearchType == "equals" ? " selected" : "") + ">Equals</option>" +
+                    "<option value='not-equals'" + (SearchType == "not-equals" ? " selected" : "") + ">Not Equal To</option>" +
+                    "<option value='greater-than'" + (SearchType == "greater-than" ? " selected" : "") + ">Greater Than</option>" +
+                    "<option value='less-than'" + (SearchType == "less-than" ? " selected" : "") + ">Less Than</option>" +
+                    "<option value='in-between'" + (SearchType == "in-between" ? " selected" : "") + ">In Between</option>" +
+                    "</select>";
 
                 // Render a date picker or two date pickers for "In Between"
                 string dateInputHtml;
                 if (SearchType == "in-between")
                 {
-                    dateInputHtml = "<label for='fromDate'>From Date:</label>" +
-                                    "<input type='date' id='fromDate' name='fromDate' style='margin-bottom: 10px; display: block;' placeholder='From Date' />" +
-                                    "<label for='toDate'>To Date:</label>" +
-                                    "<input type='date' id='toDate' name='toDate' style='margin-bottom: 10px; display: block;' placeholder='To Date' />";
+                    dateInputHtml = $" +
+                        $""<label for='fromDate' style='{labelStyle}'>From Date:</label>" +
+                        "<input type='date' id='fromDate' name='fromDate' style='margin-bottom: 10px; display: block;' placeholder='From Date' />" +
+                        "<label for='toDate' style='{labelStyle}'>To Date:</label>" +
+                        "<input type='date' id='toDate' name='toDate' style='margin-bottom: 10px; display: block;' placeholder='To Date' />";
                 }
                 else
                 {
-                    dateInputHtml = "<label for='singleDate'>Date:</label>" +
-                                    "<input type='date' id='singleDate' name='singleDate' style='margin-bottom: 10px; display: block;' placeholder='Date' />";
+                    dateInputHtml = $" +
+                        $""<label for='singleDate' style='{labelStyle}'>Date:</label>" +
+                        "<input type='date' id='singleDate' name='singleDate' style='margin-bottom: 10px; display: block;' placeholder='Date' />";
                 }
 
                 // Include JavaScript for dynamic behavior
@@ -71,13 +84,13 @@ namespace OnBoard.Apps.TagHelpers
                         const container = document.getElementById('datePickerContainer');
                         if (searchType === 'in-between') {
                             container.innerHTML = 
-                                `<label for='fromDate'>From Date:</label>
+                                `<label for='fromDate' style='{labelStyle}'>From Date:</label>
                                  <input type='date' id='fromDate' name='fromDate' style='margin-bottom: 10px; display: block;' placeholder='From Date' />
-                                 <label for='toDate'>To Date:</label>
+                                 <label for='toDate' style='{labelStyle}'>To Date:</label>
                                  <input type='date' id='toDate' name='toDate' style='margin-bottom: 10px; display: block;' placeholder='To Date' />`;
                         } else {
                             container.innerHTML = 
-                                `<label for='singleDate'>Date:</label>
+                                `<label for='singleDate' style='{labelStyle}'>Date:</label>
                                  <input type='date' id='singleDate' name='singleDate' style='margin-bottom: 10px; display: block;' placeholder='Date' />`;
                         }
                     }
@@ -86,6 +99,7 @@ namespace OnBoard.Apps.TagHelpers
                 // Construct the HTML for the TagHelper output
                 output.TagName = "div";
                 output.Attributes.SetAttribute("class", "date-search-taghelper");
+                output.Attributes.SetAttribute("style", containerStyle);
                 output.Content.SetHtmlContent($"{dropdownHtml}<div id='datePickerContainer'>{dateInputHtml}</div>{scriptHtml}");
             }
             catch (Exception ex)
