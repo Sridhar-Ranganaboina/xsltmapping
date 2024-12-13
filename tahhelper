@@ -1,0 +1,77 @@
+namespace OnBoard.Apps.TagHelpers
+{
+    using Microsoft.AspNetCore.Razor.TagHelpers;
+    using Microsoft.Extensions.Logging;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
+    [HtmlTargetElement("ob-date-search")]
+    public class DateSearchTagHelper : TagHelper
+    {
+        private readonly ILogger<DateSearchTagHelper> _logger;
+
+        public DateSearchTagHelper(ILogger<DateSearchTagHelper> logger)
+        {
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// The field name for which the criteria should apply.
+        /// </summary>
+        [HtmlAttributeName("field-name")]
+        public string? FieldName { get; set; }
+
+        /// <summary>
+        /// The type of search (Greater than, Less than, Equal to, etc.).
+        /// </summary>
+        [HtmlAttributeName("search-type")]
+        public string? SearchType { get; set; }
+
+        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+        {
+            try
+            {
+                // Validate SearchType
+                var validSearchTypes = new HashSet<string> { "equals", "not-equals", "greater-than", "less-than", "in-between" };
+                if (string.IsNullOrEmpty(SearchType) || !validSearchTypes.Contains(SearchType))
+                {
+                    throw new ArgumentException("Invalid or missing SearchType.");
+                }
+
+                // Render a dropdown for search type
+                string dropdownHtml = "<select name='searchType'>" +
+                                      "<option value='equals'>Equals</option>" +
+                                      "<option value='not-equals'>Not Equal To</option>" +
+                                      "<option value='greater-than'>Greater Than</option>" +
+                                      "<option value='less-than'>Less Than</option>" +
+                                      "<option value='in-between'>In Between</option>" +
+                                      "</select>";
+
+                // Render a date picker or two date pickers for "In Between"
+                string dateInputHtml;
+                if (SearchType == "in-between")
+                {
+                    dateInputHtml = "<input type='date' name='fromDate' placeholder='From Date' />" +
+                                    "<input type='date' name='toDate' placeholder='To Date' />";
+                }
+                else
+                {
+                    dateInputHtml = "<input type='date' name='singleDate' placeholder='Date' />";
+                }
+
+                // Construct the HTML for the TagHelper output
+                output.TagName = "div";
+                output.Attributes.SetAttribute("class", "date-search-taghelper");
+                output.Content.SetHtmlContent($"{dropdownHtml}{dateInputHtml}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing DateSearchTagHelper: {Message}", ex.Message);
+                output.Content.SetContent("Error rendering date search criteria.");
+            }
+
+            await base.ProcessAsync(context, output);
+        }
+    }
+}
