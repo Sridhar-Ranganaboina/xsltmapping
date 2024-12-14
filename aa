@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Global Date Validation</title>
+</head>
+<body>
+    <label for="customDate1">Enter Date (MMDDYYYY, MMYYYY, or YYYY):</label>
+    <input type="text" id="customDate1" class="date-input" 
+           placeholder="MMDDYYYY, MMYYYY, or YYYY" required>
+    <br><br>
+
+    <label for="customDate2">Another Date Field:</label>
+    <input type="text" id="customDate2" class="date-input" 
+           placeholder="MMDDYYYY, MMYYYY, or YYYY" required>
+    
+    <script>
+        // Reusable validation function
+        function validateDateInputs() {
+            const dateInputs = document.querySelectorAll(".date-input");
+            const datePattern = /^(0[1-9]|1[0-2])([0-2][0-9]|3[01])?\d{4}$/;
+
+            dateInputs.forEach(input => {
+                input.addEventListener("input", function () {
+                    if (datePattern.test(this.value)) {
+                        this.setCustomValidity(""); // Clear any error
+                        this.style.borderColor = "green";
+                    } else {
+                        this.setCustomValidity("Invalid date format!");
+                        this.style.borderColor = "red";
+                    }
+                });
+            });
+        }
+
+        // Apply validation globally
+        document.addEventListener("DOMContentLoaded", validateDateInputs);
+    </script>
+</body>
+</html>
