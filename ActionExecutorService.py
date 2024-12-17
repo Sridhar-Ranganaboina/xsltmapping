@@ -11,59 +11,74 @@
         <datasource data="@Model.SearchTypes" />
     </kendo-dropdownlist>
 
-    <!-- Kendo DatePickers -->
-    <kendo-datepicker name="fromDate" id="fromDate" style="width: 20%;"
-                      value="DateTime.Now" date-input="true"></kendo-datepicker>
+    <!-- DatePickers for regular behavior -->
+    <div id="datePickers" style="display: none;">
+        <kendo-datepicker name="fromDate" id="fromDate" style="width: 20%;"
+                          value="DateTime.Now" date-input="true"></kendo-datepicker>
 
-    <kendo-datepicker name="toDate" id="toDate" style="width: 20%;"
-                      value="DateTime.Now" date-input="true"></kendo-datepicker>
+        <kendo-datepicker name="toDate" id="toDate" style="width: 20%;"
+                          value="DateTime.Now" date-input="true"></kendo-datepicker>
+    </div>
 
-    <kendo-datepicker name="singleDate" id="singleDate" style="width: 20%;"
-                      value="DateTime.Now" date-input="true"></kendo-datepicker>
+    <!-- Masked TextBoxes for 'in-between' with specific formats -->
+    <div id="maskedInputs" style="display: none;">
+        <kendo-maskedtextbox name="fromMasked" id="fromMasked" style="width: 20%;"></kendo-maskedtextbox>
+        <kendo-maskedtextbox name="toMasked" id="toMasked" style="width: 20%;"></kendo-maskedtextbox>
+    </div>
 
+    <!-- Single DatePicker -->
+    <div id="singleDate" style="display: none;">
+        <kendo-datepicker name="singleDate" id="singleDatePicker" style="width: 20%;"
+                          value="DateTime.Now" date-input="true"></kendo-datepicker>
+    </div>
 </div>
 
 <script>
-    // Run when the DOM is fully loaded
     $(function () {
         const dropdown = $("#searchTypeDropdown").data("kendoDropDownList");
 
-        // Bind change event
-        dropdown.bind("change", function () {
-            const selectedValue = this.value();
+        // Function to set masks dynamically
+        function setMaskedInputFormat(format) {
+            const fromMasked = $("#fromMasked").data("kendoMaskedTextBox");
+            const toMasked = $("#toMasked").data("kendoMaskedTextBox");
 
-            if (selectedValue === "in-between") {
-                // Show 'fromDate' and 'toDate'
-                toggleDatePicker("#fromDate", true);
-                toggleDatePicker("#toDate", true);
-                toggleDatePicker("#singleDate", false);
+            if (format === "MM/YYYY") {
+                fromMasked.setOptions({ mask: "00/0000", promptChar: "_" });
+                toMasked.setOptions({ mask: "00/0000", promptChar: "_" });
+            } else if (format === "YYYY") {
+                fromMasked.setOptions({ mask: "0000", promptChar: "_" });
+                toMasked.setOptions({ mask: "0000", promptChar: "_" });
+            }
+        }
+
+        // Dropdown Change Event
+        dropdown.bind("change", function () {
+            const searchType = this.value();
+            const dateFormat = "@Model.DateFormat";
+
+            if (searchType === "in-between" && (dateFormat === "MM/YYYY" || dateFormat === "YYYY")) {
+                $("#datePickers").hide();
+                $("#singleDate").hide();
+                $("#maskedInputs").show();
+
+                // Apply masks
+                setMaskedInputFormat(dateFormat);
+            } else if (searchType === "in-between") {
+                $("#maskedInputs").hide();
+                $("#singleDate").hide();
+                $("#datePickers").show();
             } else {
-                // Show 'singleDate'
-                toggleDatePicker("#singleDate", true);
-                toggleDatePicker("#fromDate", false);
-                toggleDatePicker("#toDate", false);
+                $("#maskedInputs").hide();
+                $("#datePickers").hide();
+                $("#singleDate").show();
             }
         });
 
-        // Function to toggle Kendo DatePickers
-        function toggleDatePicker(selector, show) {
-            const picker = $(selector).data("kendoDatePicker");
-            if (picker) {
-                picker.enable(show);
-                $(selector).parent().toggle(show); // Hide/show the parent container
-            }
-        }
+        // Initialize Kendo MaskedTextBoxes
+        $("#fromMasked").kendoMaskedTextBox();
+        $("#toMasked").kendoMaskedTextBox();
 
-        // Initial state based on the current model value
-        const initialValue = dropdown.value();
-        if (initialValue === "in-between") {
-            toggleDatePicker("#fromDate", true);
-            toggleDatePicker("#toDate", true);
-            toggleDatePicker("#singleDate", false);
-        } else {
-            toggleDatePicker("#singleDate", true);
-            toggleDatePicker("#fromDate", false);
-            toggleDatePicker("#toDate", false);
-        }
+        // Trigger dropdown change to handle initial state
+        dropdown.trigger("change");
     });
 </script>
