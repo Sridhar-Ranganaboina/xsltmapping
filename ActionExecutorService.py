@@ -1,10 +1,16 @@
-public class EmbeddedResourceViewLocationExpander : IViewLocationExpander
+public class CustomViewLocationExpander : IViewLocationExpander
 {
     public IEnumerable<string> ExpandViewLocations(ViewLocationExpanderContext context, IEnumerable<string> viewLocations)
     {
-        // Assuming the namespace of your class library is "MyClassLibrary"
-        yield return "~/EmbeddedResources/MyClassLibrary/Views/{1}/{0}.cshtml";
-        yield return "~/EmbeddedResources/MyClassLibrary/Views/Shared/{0}.cshtml";
+        // Add the existing view locations
+        foreach (var location in viewLocations)
+        {
+            yield return location;
+        }
+
+        // Add the location for embedded resources
+        yield return "~/EmbeddedResources/OnBoard.Apps.TagHelpers/Views/{1}/{0}.cshtml";
+        yield return "~/EmbeddedResources/OnBoard.Apps.TagHelpers/Views/Shared/{0}.cshtml";
     }
 
     public void PopulateValues(ViewLocationExpanderContext context)
