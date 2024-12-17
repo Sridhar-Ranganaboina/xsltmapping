@@ -12,55 +12,58 @@
     </kendo-dropdownlist>
 
     <!-- Kendo DatePickers -->
-    @if (Model.SearchType == "in-between")
-    {
-        <kendo-datepicker name="fromDate" id="fromDate" style="width: 20%;"
-                          value="DateTime.Now" date-input="true"></kendo-datepicker>
-        <kendo-datepicker name="toDate" id="toDate" style="width: 20%;"
-                          value="DateTime.Now" date-input="true"></kendo-datepicker>
-    }
-    else
-    {
-        <kendo-datepicker name="singleDate" id="singleDate" style="width: 20%;"
-                          value="DateTime.Now" date-input="true"></kendo-datepicker>
-    }
+    <kendo-datepicker name="fromDate" id="fromDate" style="width: 20%;"
+                      value="DateTime.Now" date-input="true"></kendo-datepicker>
+
+    <kendo-datepicker name="toDate" id="toDate" style="width: 20%;"
+                      value="DateTime.Now" date-input="true"></kendo-datepicker>
+
+    <kendo-datepicker name="singleDate" id="singleDate" style="width: 20%;"
+                      value="DateTime.Now" date-input="true"></kendo-datepicker>
+
 </div>
 
 <script>
-    $(document).ready(function () {
-        var dropdown = $("#searchTypeDropdown").data("kendoDropDownList");
+    // Run when the DOM is fully loaded
+    $(function () {
+        const dropdown = $("#searchTypeDropdown").data("kendoDropDownList");
 
+        // Bind change event
         dropdown.bind("change", function () {
-            var selectedValue = this.value();
+            const selectedValue = this.value();
 
-            // Check which widgets to show/hide
             if (selectedValue === "in-between") {
-                // Enable 'fromDate' and 'toDate' pickers
-                enableDatePicker("#fromDate");
-                enableDatePicker("#toDate");
-                disableDatePicker("#singleDate");
+                // Show 'fromDate' and 'toDate'
+                toggleDatePicker("#fromDate", true);
+                toggleDatePicker("#toDate", true);
+                toggleDatePicker("#singleDate", false);
             } else {
-                // Enable 'singleDate' picker
-                enableDatePicker("#singleDate");
-                disableDatePicker("#fromDate");
-                disableDatePicker("#toDate");
+                // Show 'singleDate'
+                toggleDatePicker("#singleDate", true);
+                toggleDatePicker("#fromDate", false);
+                toggleDatePicker("#toDate", false);
             }
         });
 
-        function enableDatePicker(id) {
-            var datePicker = $(id).data("kendoDatePicker");
-            if (datePicker) {
-                datePicker.enable(true);
-                $(id).parent().show(); // Show it visually
+        // Function to toggle Kendo DatePickers
+        function toggleDatePicker(selector, show) {
+            const picker = $(selector).data("kendoDatePicker");
+            if (picker) {
+                picker.enable(show);
+                $(selector).parent().toggle(show); // Hide/show the parent container
             }
         }
 
-        function disableDatePicker(id) {
-            var datePicker = $(id).data("kendoDatePicker");
-            if (datePicker) {
-                datePicker.enable(false);
-                $(id).parent().hide(); // Hide it visually
-            }
+        // Initial state based on the current model value
+        const initialValue = dropdown.value();
+        if (initialValue === "in-between") {
+            toggleDatePicker("#fromDate", true);
+            toggleDatePicker("#toDate", true);
+            toggleDatePicker("#singleDate", false);
+        } else {
+            toggleDatePicker("#singleDate", true);
+            toggleDatePicker("#fromDate", false);
+            toggleDatePicker("#toDate", false);
         }
     });
 </script>
