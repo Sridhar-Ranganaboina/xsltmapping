@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Threading.Tasks;
 
 namespace SharedTagHelpers.TagHelpers
@@ -11,11 +14,13 @@ namespace SharedTagHelpers.TagHelpers
     {
         private readonly ICompositeViewEngine _viewEngine;
         private readonly ILogger<DateSearchTagHelper> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public DateSearchTagHelper(ICompositeViewEngine viewEngine, ILogger<DateSearchTagHelper> logger)
+        public DateSearchTagHelper(ICompositeViewEngine viewEngine, ILogger<DateSearchTagHelper> logger, IHttpContextAccessor httpContextAccessor)
         {
             _viewEngine = viewEngine;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HtmlAttributeName("field-name")]
@@ -55,16 +60,22 @@ namespace SharedTagHelpers.TagHelpers
 
             if (viewResult.Success)
             {
-                var viewContext = new ViewContext
-                {
-                    Writer = sw,
-                    ViewData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary<object>(
+                // Create a fake HttpContext to pass to the ViewContext
+                var httpContext = _httpContextAccessor.HttpContext ?? new DefaultHttpContext();
+                var actionContext = new ActionContext(httpContext, new Microsoft.AspNetCore.Routing.RouteData(), new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
+
+                var viewContext = new ViewContext(
+                    actionContext,
+                    viewResult.View,
+                    new ViewDataDictionary<object>(
                         new Microsoft.AspNetCore.Mvc.ModelBinding.EmptyModelMetadataProvider(),
                         new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary())
                     {
                         Model = model
-                    }
-                };
+                    },
+                    sw
+                );
+
                 await viewResult.View.RenderAsync(viewContext);
             }
             else
