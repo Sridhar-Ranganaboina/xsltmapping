@@ -1,13 +1,14 @@
-function updateHiddenField() {
-    var fieldName = $("#FieldName").val(); // Assuming dropdown id = FieldName
-    var searchType = $("#SearchType").val(); // Assuming dropdown id = SearchType
-    var singleDate = $("#singleDate").val(); // Single datepicker value
-    var fromDate = $("#fromDate").val(); // "From Date" value
-    var toDate = $("#toDate").val(); // "To Date" value
+public class EmbeddedResourceViewLocationExpander : IViewLocationExpander
+{
+    public IEnumerable<string> ExpandViewLocations(ViewLocationExpanderContext context, IEnumerable<string> viewLocations)
+    {
+        // Assuming the namespace of your class library is "MyClassLibrary"
+        yield return "~/EmbeddedResources/MyClassLibrary/Views/{1}/{0}.cshtml";
+        yield return "~/EmbeddedResources/MyClassLibrary/Views/Shared/{0}.cshtml";
+    }
 
-    // Concatenate the values
-    var hiddenFieldValue = fieldName + "_" + searchType + "_" + singleDate + "_" + fromDate + "_" + toDate;
-
-    // Update the hidden field
-    $("#hiddenField").val(hiddenFieldValue);
+    public void PopulateValues(ViewLocationExpanderContext context)
+    {
+        // No additional values to populate
+    }
 }
