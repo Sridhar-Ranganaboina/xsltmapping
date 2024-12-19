@@ -1,133 +1,62 @@
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
+<!DOCTYPE html>
+<html>
+<head>
+   
+    
+    <title></title>
+    <link href="https://kendo.cdn.telerik.com/themes/10.0.1/default/default-main.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>    
+    <script src="https://kendo.cdn.telerik.com/2024.4.1112/js/kendo.all.min.js"></script>
+    
+    
+</head>
+<body>
+  <div style="display:flex">  
+  <input id="dropDownList" fill-mode="FillMode.Outline" rounded="Rounded.Small" style="width:35%;background-color:ButtonFace"></input>  
+  <input id="fromDateTxt" fill-mode="FillMode.Outline" rounded="Rounded.Small" style="width:35%;background-color:ButtonFace"></input>  
+		 <input id="toDateTxt" fill-mode="FillMode.Outline" rounded="Rounded.Small" style="width:35%;background-color:ButtonFace" />
+			<input id="fromDatepicker" value="10/10/2011" title="datepicker" fill-mode="FillMode.Outline" rounded="Rounded.Small" style="width:35%;background-color:ButtonFace"/>
+    <input id="toDatePicker" value="10/10/2011" title="datepicker" fill-mode="FillMode.Outline" rounded="Rounded.Small" style="width:35%;background-color:ButtonFace"/>
+	<input id="singleDatePicker" value="10/10/2011" title="datepicker" fill-mode="FillMode.Outline" rounded="Rounded.Small" style="width:35%;background-color:ButtonFace"/>
+	
+	</div>
+  
+    <script>
+        $(document).ready(function () {
+		
+			 $("#fromDateTxt").kendoMaskedTextBox({
+            mask: "00/0000"
+        });
+		$("#toDateTxt").kendoMaskedTextBox({
+            mask: "00/0000"
+        });
+		
+            $("#fromDatepicker").kendoDatePicker({
+                componentType: "modern"
+            });
+          $("#toDatePicker").kendoDatePicker({
+                componentType: "modern"
+            });
+			
+			 $("#singleDatePicker").kendoDatePicker({
+                componentType: "modern"
+            });
+			
 
-namespace OnBoard.Apps.TagHelpers
-{
-    public enum SearchTypeEnum { Equals, NotEquals, GreaterThan, LessThan, InBetween }
-    public enum DateFormatEnum { MMDDYYYY, MMYYYY, YYYY }
+            $("#dropDownList").kendoDropDownList({
+                dataSource: ["equal", "in-between"],
+                value: "modern",
+                change: function (e) {
+                    var picker = $("#datepicker").data("kendoDatePicker");
+                    var type = this.value();
 
-    [HtmlTargetElement("ob-date-search")]
-    public class DateSearchTagHelper : TagHelper
-    {
-        [HtmlAttributeName("field-name")]
-        public string? FieldName { get; set; }
+                   
+                }
+            });
+        });
+    </script>
 
-        [HtmlAttributeName("search-type")]
-        public SearchTypeEnum SearchType { get; set; }
+<div>
 
-        [HtmlAttributeName("orientation")]
-        public string Orientation { get; set; } = "horizontal";
-
-        [HtmlAttributeName("date-format")]
-        public DateFormatEnum DateFormat { get; set; }
-
-        public override void Process(TagHelperContext context, TagHelperOutput output)
-        {
-            output.TagName = "div";
-            output.Attributes.SetAttribute("class", "date-search-container");
-            output.Content.SetHtmlContent($@"
-                <div style='{{(Orientation == ""horizontal"" ? ""display: flex; gap: 15px;"" : ""display: block;"")}}'>
-                    <div style='width: 40%;'>
-                        <kendo-dropdownlist name='{FieldName}' id='search_type_{FieldName}' value='{SearchType}' class='update_hidden'>
-                            <datasource data='@Enum.GetNames(typeof(SearchTypeEnum))' />
-                        </kendo-dropdownlist>
-                    </div>
-                    <div id='date_pickers_div_{FieldName}' style='display: none; width:50%;'>
-                        <kendo-datepicker name='fromDate' id='from_datepicker_{FieldName}' style='width: 25%;' date-input='true' class='update_hidden'></kendo-datepicker>
-                        <kendo-datepicker name='toDate' id='to_datepicker_{FieldName}' style='width: 25%;' date-input='true' class='update_hidden'></kendo-datepicker>
-                    </div>
-                    <div id='masked_inputs_div_{FieldName}' style='display: none;width:50%;'>
-                        <kendo-maskedtextbox name='fromMasked' id='from_masked_txt_{FieldName}' style='width: 25%;' placeholder='{DateFormat}' class='update_hidden'></kendo-maskedtextbox>
-                        <kendo-maskedtextbox name='toMasked' id='to_masked_txt_{FieldName}' style='width: 25%;' placeholder='{DateFormat}' class='update_hidden'></kendo-maskedtextbox>
-                    </div>
-                    <div id='single_date_div_{FieldName}' style='display: none;width:50%;'>
-                        <kendo-datepicker name='singleDate' id='single_datepicker_{FieldName}' style='width: 50%;' date-input='true' class='update_hidden'></kendo-datepicker>
-                    </div>
-                    <input type='hidden' id='hidden_{FieldName}' value='' />
-                </div>
-                <script>
-                    $(function () {{
-                        const searchTypeDropdownId = ""#search_type_{FieldName}"";
-                        const fromMaskedTxtId = ""#from_masked_txt_{FieldName}"";
-                        const toMaskedTxtId = ""#to_masked_txt_{FieldName}"";
-                        const fromDatepickerId = ""#from_datepicker_{FieldName}"";
-                        const toDatepickerId = ""#to_datepicker_{FieldName}"";
-                        const singleDatepickerId = ""#single_datepicker_{FieldName}"";
-                        const datePickersDivId = ""#date_pickers_div_{FieldName}"";
-                        const maskedInputsDivId = ""#masked_inputs_div_{FieldName}"";
-                        const singleDateDivId = ""#single_date_div_{FieldName}"";
-
-                        function setMaskedInputFormat(format) {{
-                            const fromMasked = $(fromMaskedTxtId).data(""kendoMaskedTextBox"");
-                            const toMasked = $(toMaskedTxtId).data(""kendoMaskedTextBox"");
-
-                            if (format === ""MMYYYY"") {{
-                                fromMasked.setOptions({{ mask: ""00/0000"", promptChar: ""_"" }});
-                                toMasked.setOptions({{ mask: ""00/0000"", promptChar: ""_"" }});
-                            }} else if (format === ""YYYY"") {{
-                                fromMasked.setOptions({{ mask: ""0000"", promptChar: ""_"" }});
-                                toMasked.setOptions({{ mask: ""0000"", promptChar: ""_"" }});
-                            }}
-                        }}
-
-                        function updateHiddenField() {{
-        const searchType = $(""#searchTypeDropdown"").val();
-        const dateFormat = $(""#dateFormatDropdown"").val();
-        let hiddenFieldValue = """";
-
-        if (searchType === ""InBetween"" && dateFormat === ""MMDDYYYY"") {{
-            hiddenFieldValue = `{{
-                field_name: ${{fieldName}},
-                search_type: ${{searchType}},
-                single_date: """",
-                from_date: ${{isNaN(fromDate) ? """" : fromDate.toISOString().split(""T"")[0]}},
-                to_date: ${{isNaN(toDate) ? """" : toDate.toISOString().split(""T"")[0]}}
-            }}`;
-        }} else if (searchType === ""InBetween"" && dateFormat !== ""MMDDYYYY"") {{
-            hiddenFieldValue = `{{
-                field_name: ${{fieldName}},
-                search_type: ${{searchType}},
-                single_date: """",
-                from_date: ${{isNaN(fromMaskedText) ? """" : fromMaskedText.toISOString().split(""T"")[0]}},
-                to_date: ${{isNaN(toMaskedText) ? """" : toMaskedText.toISOString().split(""T"")[0]}}
-            }}`;
-        }} else {{
-            hiddenFieldValue = `{{
-                field_name: ${{fieldName}},
-                search_type: ${{searchType}},
-                single_date: ${{isNaN(singleDate) ? """" : singleDate.toISOString().split(""T"")[0]}},
-                from_date: """",
-                to_date: """"
-            }}`;
-        }}
-
-        $(""#hidden_"" + fieldName).val(hiddenFieldValue);
-    }}
-
-    const dropdown = $(""#searchTypeDropdown"").data(""kendoDropDownList"");
-    dropdown.bind(""change"", function() {{
-        const searchType = this.value();
-        if (searchType === ""InBetween"" && (dateFormat === ""MMYYYY"" || dateFormat === ""YYYY"")) {{
-            $(datePickersDivId).hide();
-            $(singleDateDivId).hide();
-            $(maskedInputsDivId).show();
-            setMaskedInputFormat(dateFormat);
-        }} else if (searchType === ""InBetween"") {{
-            $(maskedInputsDivId).hide();
-            $(singleDateDivId).hide();
-            $(datePickersDivId).show();
-        }} else {{
-            $(maskedInputsDivId).hide();
-            $(datePickersDivId).hide();
-            $(singleDateDivId).show();
-        }}
-        updateHiddenField();
-    }});
-
-    updateHiddenField();
-}});");
-        }
-    }
-}
+</body>
+</html>
