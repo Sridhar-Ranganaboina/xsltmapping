@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 
@@ -72,50 +73,61 @@ namespace OnBoard.Apps.TagHelpers
                         }}
 
                         function updateHiddenField() {{
-                            const searchType = $(searchTypeDropdownId).val();
-                            const fieldName = ""{FieldName}"";
-                            const dateFormat = ""{DateFormat}"";
-                            const singleDate = new Date($(singleDatepickerId).val());
-                            const fromDate = new Date($(fromDatepickerId).val());
-                            const toDate = new Date($(toDatepickerId).val());
-                            const fromMaskedText = new Date($(fromMaskedTxtId).val());
-                            const toMaskedText = new Date($(toMaskedTxtId).val());
+        const searchType = $(""#searchTypeDropdown"").val();
+        const dateFormat = $(""#dateFormatDropdown"").val();
+        let hiddenFieldValue = """";
 
-                            let hiddenFieldValue = """";
-                            if (searchType === ""InBetween"" && dateFormat === ""MMDDYYYY"") {{
-                                hiddenFieldValue = `{{field_name:${{fieldName}},search_type:${{searchType}},single_date:"",from_date:${{isNaN(fromDate) ? "" : fromDate.toISOString().split("T")[0]}},to_date:${{isNaN(toDate) ? "" : toDate.toISOString().split("T")[0]}}}}`;
-                            }} else if (searchType === ""InBetween"" && dateFormat !== ""MMDDYYYY"") {{
-                                hiddenFieldValue = `{{field_name:${{fieldName}},search_type:${{searchType}},single_date:"",from_date:${{isNaN(fromMaskedText) ? "" : fromMaskedText.toISOString().split("T")[0]}},to_date:${{isNaN(toMaskedText) ? "" : toMaskedText.toISOString().split("T")[0]}}}}`;
-                            }} else {{
-                                hiddenFieldValue = `{{field_name:${{fieldName}},search_type:${{searchType}},single_date:${{isNaN(singleDate) ? "" : singleDate.toISOString().split("T")[0]}},from_date:"",to_date:""}}`;
-                            }}
-                            $("#hidden_{FieldName}").val(hiddenFieldValue);
-                        }}
+        if (searchType === ""InBetween"" && dateFormat === ""MMDDYYYY"") {{
+            hiddenFieldValue = `{{
+                field_name: ${{fieldName}},
+                search_type: ${{searchType}},
+                single_date: """",
+                from_date: ${{isNaN(fromDate) ? """" : fromDate.toISOString().split(""T"")[0]}},
+                to_date: ${{isNaN(toDate) ? """" : toDate.toISOString().split(""T"")[0]}}
+            }}`;
+        }} else if (searchType === ""InBetween"" && dateFormat !== ""MMDDYYYY"") {{
+            hiddenFieldValue = `{{
+                field_name: ${{fieldName}},
+                search_type: ${{searchType}},
+                single_date: """",
+                from_date: ${{isNaN(fromMaskedText) ? """" : fromMaskedText.toISOString().split(""T"")[0]}},
+                to_date: ${{isNaN(toMaskedText) ? """" : toMaskedText.toISOString().split(""T"")[0]}}
+            }}`;
+        }} else {{
+            hiddenFieldValue = `{{
+                field_name: ${{fieldName}},
+                search_type: ${{searchType}},
+                single_date: ${{isNaN(singleDate) ? """" : singleDate.toISOString().split(""T"")[0]}},
+                from_date: """",
+                to_date: """"
+            }}`;
+        }}
 
-                        const dropdown = $(searchTypeDropdownId).data(""kendoDropDownList"");
-                        dropdown.bind(""change"", function () {{
-                            const searchType = this.value();
-                            if (searchType === ""InBetween"" && (dateFormat === ""MMYYYY"" || dateFormat === ""YYYY"")) {{
-                                $(datePickersDivId).hide();
-                                $(singleDateDivId).hide();
-                                $(maskedInputsDivId).show();
-                                setMaskedInputFormat(dateFormat);
-                            }} else if (searchType === ""InBetween"") {{
-                                $(maskedInputsDivId).hide();
-                                $(singleDateDivId).hide();
-                                $(datePickersDivId).show();
-                            }} else {{
-                                $(maskedInputsDivId).hide();
-                                $(datePickersDivId).hide();
-                                $(singleDateDivId).show();
-                            }}
-                            updateHiddenField();
-                        }});
-                        updateHiddenField();
-                    }});
-                </script>
-            "
-);
+        $(""#hidden_"" + fieldName).val(hiddenFieldValue);
+    }}
+
+    const dropdown = $(""#searchTypeDropdown"").data(""kendoDropDownList"");
+    dropdown.bind(""change"", function() {{
+        const searchType = this.value();
+        if (searchType === ""InBetween"" && (dateFormat === ""MMYYYY"" || dateFormat === ""YYYY"")) {{
+            $(datePickersDivId).hide();
+            $(singleDateDivId).hide();
+            $(maskedInputsDivId).show();
+            setMaskedInputFormat(dateFormat);
+        }} else if (searchType === ""InBetween"") {{
+            $(maskedInputsDivId).hide();
+            $(singleDateDivId).hide();
+            $(datePickersDivId).show();
+        }} else {{
+            $(maskedInputsDivId).hide();
+            $(datePickersDivId).hide();
+            $(singleDateDivId).show();
+        }}
+        updateHiddenField();
+    }});
+
+    updateHiddenField();
+}});");
         }
     }
 }
