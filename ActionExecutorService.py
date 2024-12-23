@@ -2,6 +2,10 @@
 public async Task ProcessAsync_AddsHiddenField_WhenForIsNotNull()
 {
     // Arrange
+    var metadataProvider = new Microsoft.AspNetCore.Mvc.ModelBinding.EmptyModelMetadataProvider();
+    var modelMetadata = metadataProvider.GetMetadataForType(typeof(string));
+    var modelExplorer = new Microsoft.AspNetCore.Mvc.ViewFeatures.ModelExplorer(metadataProvider, modelMetadata, "TestValue");
+
     var tagHelper = new DateSearchTagHelper(
         _mockViewEngine.Object,
         _mockHttpContextAccessor.Object,
@@ -12,12 +16,7 @@ public async Task ProcessAsync_AddsHiddenField_WhenForIsNotNull()
         SearchType = "Contains",
         DateFormat = "MM/dd/yyyy",
         Orientation = "vertical",
-        For = new ModelExpression("TestProperty", 
-            new ViewDataDictionary(new Microsoft.AspNetCore.Mvc.ModelBinding.EmptyModelMetadataProvider(), 
-            new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary())
-            {
-                Model = "TestValue"
-            })
+        For = new ModelExpression("TestProperty", modelExplorer)
     };
 
     var mockView = new Mock<IView>();
