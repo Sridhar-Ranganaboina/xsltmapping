@@ -1,139 +1,135 @@
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.Extensions.Logging;
 using Moq;
-using System.IO;
-using System.Threading.Tasks;
 using Xunit;
 
-namespace OnBoard.Apps.TagHelpers.UnitTests
+namespace OnBoard.Apps.TagHelpers.Tests
 {
     public class DateSearchTagHelperTests
     {
-        private readonly Mock<ICompositeViewEngine> _mockViewEngine;
-        private readonly Mock<ILogger<DateSearchTagHelper>> _mockLogger;
-        private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
-        private readonly Mock<ITempDataProvider> _mockTempDataProvider;
+        private readonly Mock<ICompositeViewEngine> _viewEngineMock;
+        private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
+        private readonly Mock<ITempDataProvider> _tempDataProviderMock;
+        private readonly DateSearchTagHelper _tagHelper;
 
         public DateSearchTagHelperTests()
         {
-            _mockViewEngine = new Mock<ICompositeViewEngine>();
-            _mockLogger = new Mock<ILogger<DateSearchTagHelper>>();
-            _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
-            _mockTempDataProvider = new Mock<ITempDataProvider>();
+            _viewEngineMock = new Mock<ICompositeViewEngine>();
+            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            _tempDataProviderMock = new Mock<ITempDataProvider>();
+
+            _tagHelper = new DateSearchTagHelper(_viewEngineMock.Object, _httpContextAccessorMock.Object, _tempDataProviderMock.Object);
         }
 
         [Fact]
-        public async Task ProcessAsync_RendersPartialView_WhenViewExists()
+        public async Task ProcessAsync_SetsTagNameAndClass()
         {
             // Arrange
-            var tagHelper = new DateSearchTagHelper(
-                _mockViewEngine.Object,
-                _mockLogger.Object,
-                _mockHttpContextAccessor.Object,
-                _mockTempDataProvider.Object
-            )
-            {
-                FieldName = "TestField",
-                SearchType = "Contains",
-                DateFormat = "MM/dd/yyyy",
-                Orientation = "vertical"
-            };
-
-            var mockView = new Mock<IView>();
-            _mockViewEngine
-                .Setup(ve => ve.FindView(It.IsAny<ActionContext>(), "_DateLookupPartial", false))
-                .Returns(ViewEngineResult.Found("_DateLookupPartial", mockView.Object));
-
-            var tagHelperContext = new TagHelperContext(
+            var context = new TagHelperContext(
                 new TagHelperAttributeList(),
-                new Dictionary<object, object>(),
-                "test"
-            );
+                new TagHelperContextItems(),
+                Guid.NewGuid().ToString("N"));
 
-            var tagHelperOutput = new TagHelperOutput(
+            var output = new TagHelperOutput(
                 "ob-date-search",
                 new TagHelperAttributeList(),
-                (useCachedResult, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent())
-            );
+                (useCachedResult, encoder) =>
+                    Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
+            _viewEngineMock
+                .Setup(ve => ve.FindView(It.IsAny<ActionContext>(), "_DateLookupPartial", false))
+                .Returns(ViewEngineResult.NotFound("_DateLookupPartial", new[] { "_DateLookupPartial" }));
+
+            // Act
+            await _tagHelper.ProcessAsync(context, output);
+
+            // Assert
+            Assert.Equal("div", output.TagName);
+            Assert.Contains(output.Attributes, a => a.Name == "class" && a.Value.ToString() == "date-search-container");
+        }
+
+        [Fact]
+        public async Task ProcessAsync_RendersHiddenFieldWhenAspForIsSet()
+        {
+            // Arrange
+            var modelExplorer = new EmptyModelMetadataProvider().GetModelExplorerForType(typeof(string), "TestValue");
+            var modelExpression = new ModelExpression("TestField", modelExplorer);
+
+            _tagHelper.For = modelExpression;
+            _tagHelper.FieldName = "TestField";
+
+            var context = new TagHelperContext(
+                new TagHelperAttributeList(),
+                new TagHelperContextItems(),
+                Guid.NewGuid().ToString("N"));
+
+            var output = new TagHelperOutput(
+                "ob-date-search",
+                new TagHelperAttributeList(),
+                (useCachedResult, encoder) =>
+                    Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
+
+            _viewEngineMock
+                .Setup(ve => ve.FindView(It.IsAny<ActionContext>(), "_DateLookupPartial", false))
+                .Returns(ViewEngineResult.NotFound("_DateLookupPartial", new[] { "_DateLookupPartial" }));
+
+            // Act
+            await _tagHelper.ProcessAsync(context, output);
+
+            // Assert
+            var content = output.Content.GetContent();
+            Assert.Contains("<input", content);
+            Assert.Contains("type=\"hidden\"", content);
+            Assert.Contains("name=\"TestField\"", content);
+            Assert.Contains("value=\"TestValue\"", content);
+        }
+
+        [Fact]
+        public async Task RenderPartialViewAsync_ReturnsErrorWhenViewNotFound()
+        {
+            // Arrange
+            _httpContextAccessorMock.Setup(h => h.HttpContext).Returns(new DefaultHttpContext());
+
+            _viewEngineMock
+                .Setup(ve => ve.FindView(It.IsAny<ActionContext>(), "_DateLookupPartial", false))
+                .Returns(ViewEngineResult.NotFound("_DateLookupPartial", new[] { "_DateLookupPartial" }));
+
+            // Act
+            var result = await _tagHelper.RenderPartialViewAsync("_DateLookupPartial", new object());
+
+            // Assert
+            Assert.Contains("Error: View _DateLookupPartial not found.", result);
+        }
+
+        [Fact]
+        public async Task RenderPartialViewAsync_RendersViewSuccessfully()
+        {
+            // Arrange
+            var mockView = new Mock<IView>();
             var stringWriter = new StringWriter();
             mockView
                 .Setup(v => v.RenderAsync(It.IsAny<ViewContext>()))
-                .Callback<ViewContext>(vc =>
-                {
-                    stringWriter.Write("<div>Rendered View</div>");
-                })
+                .Callback<ViewContext>(vc => vc.Writer.Write("Rendered Content"))
                 .Returns(Task.CompletedTask);
 
-            _mockHttpContextAccessor.Setup(hca => hca.HttpContext).Returns(new DefaultHttpContext());
+            _httpContextAccessorMock.Setup(h => h.HttpContext).Returns(new DefaultHttpContext());
 
-            // Act
-            await tagHelper.ProcessAsync(tagHelperContext, tagHelperOutput);
-
-            // Assert
-            Assert.Equal("div", tagHelperOutput.TagName);
-            Assert.Contains("date-search-container", tagHelperOutput.Attributes["class"].Value.ToString());
-            Assert.Contains("Rendered View", tagHelperOutput.Content.GetContent());
-        }
-
-        [Fact]
-        public async Task ProcessAsync_ReturnsErrorMessage_WhenViewDoesNotExist()
-        {
-            // Arrange
-            var tagHelper = new DateSearchTagHelper(
-                _mockViewEngine.Object,
-                _mockLogger.Object,
-                _mockHttpContextAccessor.Object,
-                _mockTempDataProvider.Object
-            );
-
-            _mockViewEngine
+            _viewEngineMock
                 .Setup(ve => ve.FindView(It.IsAny<ActionContext>(), "_DateLookupPartial", false))
-                .Returns(ViewEngineResult.NotFound("_DateLookupPartial", new[] { "TestLocation" }));
-
-            var tagHelperContext = new TagHelperContext(
-                new TagHelperAttributeList(),
-                new Dictionary<object, object>(),
-                "test"
-            );
-
-            var tagHelperOutput = new TagHelperOutput(
-                "ob-date-search",
-                new TagHelperAttributeList(),
-                (useCachedResult, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent())
-            );
-
-            _mockHttpContextAccessor.Setup(hca => hca.HttpContext).Returns(new DefaultHttpContext());
+                .Returns(ViewEngineResult.Found("_DateLookupPartial", mockView.Object));
 
             // Act
-            await tagHelper.ProcessAsync(tagHelperContext, tagHelperOutput);
+            var result = await _tagHelper.RenderPartialViewAsync("_DateLookupPartial", new object());
 
             // Assert
-            Assert.Equal("div", tagHelperOutput.TagName);
-            Assert.Contains("Error: View _DateLookupPartial not found.", tagHelperOutput.Content.GetContent());
-            _mockLogger.Verify(
-                logger => logger.LogError(It.Is<string>(s => s.Contains("_DateLookupPartial not found"))),
-                Times.Once
-            );
-        }
-
-        [Fact]
-        public void Constructor_InitializesCorrectly()
-        {
-            // Arrange & Act
-            var tagHelper = new DateSearchTagHelper(
-                _mockViewEngine.Object,
-                _mockLogger.Object,
-                _mockHttpContextAccessor.Object,
-                _mockTempDataProvider.Object
-            );
-
-            // Assert
-            Assert.NotNull(tagHelper);
+            Assert.Equal("Rendered Content", result);
         }
     }
 }
