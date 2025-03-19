@@ -28,7 +28,8 @@
     }
 ]
 
-
+script_dir = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(script_dir, "customer_discussions.json")
 # Load JSON data
 with open("customer_discussions.json", "r") as file:
     data = json.load(file)
