@@ -19,14 +19,35 @@
     },
     {
         "Conversation ID": 3,
-        "Timestamp": "2025-03-19 10:22:00",
-        "Customer Query": "Can I expedite my application?",
-        "Agent Response": "We offer priority processing for certain cases. Let me check eligibility.",
-        "Intent": "Expedite Request",
-        "Sentiment": "Neutral",
-        "Resolution Status": "Resolved"
+        "Timestamp": "2025-03-19 11:00:00",
+        "Customer Query": "There is an unauthorized charge on my credit card. What should I do?",
+        "Agent Response": "I understand your concern. I can help you dispute the charge. Can you provide the transaction details?",
+        "Intent": "Dispute Transaction",
+        "Sentiment": "Angry",
+        "Resolution Status": "Pending Investigation"
     }
 ]
+
+
+"How do I check my credit card application status?"
+
+💡 Expected RAG Response:
+"To check your credit card application status, you need to provide your application ID. Please share your application ID to proceed."
+(Based on Record 1)
+
+"I applied for a credit card last week but got no update. What should I do?"
+
+💡 Expected RAG Response:
+"If you haven't received an update, we can check your application progress. Let me check and provide you with the latest status."
+
+"I noticed a transaction I didn’t make. How do I dispute it?"
+
+💡 Expected RAG Response:
+"I understand your concern. To dispute an unauthorized charge, please provide the transaction details. I will help you initiate an investigation."
+(Based on Record 3)
+
+
+
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(script_dir, "customer_discussions.json")
