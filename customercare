@@ -1,0 +1,44 @@
+[
+    {
+        "Conversation ID": 1,
+        "Timestamp": "2025-03-19 10:15:00",
+        "Customer Query": "I want to check my credit card application status.",
+        "Agent Response": "Sure, can I have your application ID?",
+        "Intent": "Check Application Status",
+        "Sentiment": "Neutral",
+        "Resolution Status": "Open"
+    },
+    {
+        "Conversation ID": 2,
+        "Timestamp": "2025-03-19 10:18:00",
+        "Customer Query": "I applied last week but haven't received any update.",
+        "Agent Response": "Let me check your application progress. One moment.",
+        "Intent": "Application Delay",
+        "Sentiment": "Frustrated",
+        "Resolution Status": "In Progress"
+    },
+    {
+        "Conversation ID": 3,
+        "Timestamp": "2025-03-19 10:22:00",
+        "Customer Query": "Can I expedite my application?",
+        "Agent Response": "We offer priority processing for certain cases. Let me check eligibility.",
+        "Intent": "Expedite Request",
+        "Sentiment": "Neutral",
+        "Resolution Status": "Resolved"
+    }
+]
+
+
+# Load JSON data
+with open("customer_discussions.json", "r") as file:
+    data = json.load(file)
+
+# Combine conversations into text chunks
+texts = [
+    f"Customer: {entry['Customer Query']} \nAgent: {entry['Agent Response']}"
+    for entry in data
+]
+
+# Chunking the text (200 characters per chunk)
+splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=50)
+chunks = splitter.split_text("\n\n".join(texts))
