@@ -1,42 +1,37 @@
-h
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.enhanced.dynamodb.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class QueryBySessionId {
+public class QueryBySessionIdEnhanced {
     public static void main(String[] args) {
         String tableName = "YourTableName";
         String indexName = "sessionId-index";
         String sessionIdValue = "your-session-id";
 
+        // Create DynamoDB client
         DynamoDbClient dynamoDb = DynamoDbClient.builder()
-                .region(Region.US_EAST_1) // Replace with your region
+                .region(Region.US_EAST_1)
                 .build();
 
-        // Build the expression attribute values
-        Map<String, AttributeValue> expressionValues = new HashMap<>();
-        expressionValues.put(":sid", AttributeValue.fromS(sessionIdValue));
-
-        // Build the query request
-        QueryRequest queryRequest = QueryRequest.builder()
-                .tableName(tableName)
-                .indexName(indexName) // Important: set the GSI name
-                .keyConditionExpression("sessionId = :sid")
-                .expressionAttributeValues(expressionValues)
+        // Create Enhanced client
+        DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(dynamoDb)
                 .build();
 
-        // Execute the query
-        QueryResponse queryResponse = dynamoDb.query(queryRequest);
+        // Create table and index references
+        DynamoDbTable<SessionRecord> table = enhancedClient.table(tableName, TableSchema.fromBean(SessionRecord.class));
+        DynamoDbIndex<SessionRecord> sessionIdIndex = table.index(indexName);
 
-        // Print results
-        queryResponse.items().forEach(item -> {
-            System.out.println("Item:");
-            item.forEach((key, value) -> System.out.println(key + ": " + value));
-            System.out.println("-----");
+        // Build query request
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(Key.builder().partitionValue(sessionIdValue).build()))
+                .build();
+
+        // Execute query
+        sessionIdIndex.query(queryRequest).items().forEach(item -> {
+            System.out.println("Found item: " + item.getId() + ", sessionId: " + item.getSessionId());
         });
 
         dynamoDb.close();
