@@ -1,0 +1,44 @@
+h
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class QueryBySessionId {
+    public static void main(String[] args) {
+        String tableName = "YourTableName";
+        String indexName = "sessionId-index";
+        String sessionIdValue = "your-session-id";
+
+        DynamoDbClient dynamoDb = DynamoDbClient.builder()
+                .region(Region.US_EAST_1) // Replace with your region
+                .build();
+
+        // Build the expression attribute values
+        Map<String, AttributeValue> expressionValues = new HashMap<>();
+        expressionValues.put(":sid", AttributeValue.fromS(sessionIdValue));
+
+        // Build the query request
+        QueryRequest queryRequest = QueryRequest.builder()
+                .tableName(tableName)
+                .indexName(indexName) // Important: set the GSI name
+                .keyConditionExpression("sessionId = :sid")
+                .expressionAttributeValues(expressionValues)
+                .build();
+
+        // Execute the query
+        QueryResponse queryResponse = dynamoDb.query(queryRequest);
+
+        // Print results
+        queryResponse.items().forEach(item -> {
+            System.out.println("Item:");
+            item.forEach((key, value) -> System.out.println(key + ": " + value));
+            System.out.println("-----");
+        });
+
+        dynamoDb.close();
+    }
+}
