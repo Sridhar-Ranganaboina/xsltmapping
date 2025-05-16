@@ -1,39 +1,24 @@
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.enhanced.dynamodb.*;
-import software.amazon.awssdk.enhanced.dynamodb.model.*;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+@Override
+public List<AuditDAO> getAuditDataForTodayByUserId(String userId) {
+    try {
+        // Get today's start and end timestamps in UTC
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        String startOfDay = today.atStartOfDay().toInstant(ZoneOffset.UTC).toString();      // e.g., 2025-05-16T00:00:00Z
+        String endOfDay = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC).toString(); // 2025-05-17T00:00:00Z
 
-public class QueryBySessionIdEnhanced {
-    public static void main(String[] args) {
-        String tableName = "YourTableName";
-        String indexName = "sessionId-index";
-        String sessionIdValue = "your-session-id";
+        QueryConditional queryConditional = QueryConditional.sortBetween(
+            Key.builder().partitionValue(userId).sortValue(startOfDay).build(),
+            Key.builder().partitionValue(userId).sortValue(endOfDay).build()
+        );
 
-        // Create DynamoDB client
-        DynamoDbClient dynamoDb = DynamoDbClient.builder()
-                .region(Region.US_EAST_1)
-                .build();
+        return auditDynamoDbTable.index("event_timestamp_index")
+            .query(r -> r.queryConditional(queryConditional))
+            .stream()
+            .flatMap(page -> page.items().stream())
+            .collect(Collectors.toList());
 
-        // Create Enhanced client
-        DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
-                .dynamoDbClient(dynamoDb)
-                .build();
-
-        // Create table and index references
-        DynamoDbTable<SessionRecord> table = enhancedClient.table(tableName, TableSchema.fromBean(SessionRecord.class));
-        DynamoDbIndex<SessionRecord> sessionIdIndex = table.index(indexName);
-
-        // Build query request
-        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
-                .queryConditional(QueryConditional.keyEqualTo(Key.builder().partitionValue(sessionIdValue).build()))
-                .build();
-
-        // Execute query
-        sessionIdIndex.query(queryRequest).items().forEach(item -> {
-            System.out.println("Found item: " + item.getId() + ", sessionId: " + item.getSessionId());
-        });
-
-        dynamoDb.close();
+    } catch (DynamoDbException e) {
+        log.error("Failed to retrieve today's audit records for userId: {}. Error: {}", userId, e.getMessage());
+        throw new AuditException("Failed to retrieve today's audit records", e);
     }
 }
