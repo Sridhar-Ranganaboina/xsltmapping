@@ -1,24 +1,81 @@
-@Override
-public List<AuditDAO> getAuditDataForTodayByUserId(String userId) {
-    try {
-        // Get today's start and end timestamps in UTC
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
-        String startOfDay = today.atStartOfDay().toInstant(ZoneOffset.UTC).toString();      // e.g., 2025-05-16T00:00:00Z
-        String endOfDay = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC).toString(); // 2025-05-17T00:00:00Z
+package com.chase.ccb.mlio.insights.config;
 
-        QueryConditional queryConditional = QueryConditional.sortBetween(
-            Key.builder().partitionValue(userId).sortValue(startOfDay).build(),
-            Key.builder().partitionValue(userId).sortValue(endOfDay).build()
-        );
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.*;
 
-        return auditDynamoDbTable.index("event_timestamp_index")
-            .query(r -> r.queryConditional(queryConditional))
-            .stream()
-            .flatMap(page -> page.items().stream())
-            .collect(Collectors.toList());
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
+    }
 
-    } catch (DynamoDbException e) {
-        log.error("Failed to retrieve today's audit records for userId: {}. Error: {}", userId, e.getMessage());
-        throw new AuditException("Failed to retrieve today's audit records", e);
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
     }
 }
+
+package com.chase.ccb.mlio.insights.controller;
+
+import com.chase.ccb.mlio.insights.model.StatusUpdate;
+import com.chase.ccb.mlio.insights.model.CallbackPayload;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/perceptron-callback")
+public class CallbackController {
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @PostMapping("/{requestId}")
+    public ResponseEntity<Void> receiveCallback(@PathVariable String requestId, @RequestBody CallbackPayload payload) {
+        messagingTemplate.convertAndSend("/topic/status/" + requestId, new StatusUpdate("COMPLETED", requestId));
+        return ResponseEntity.ok().build();
+    }
+}
+
+package com.chase.ccb.mlio.insights.model;
+
+public class StatusUpdate {
+    private String status;
+    private String requestId;
+
+    public StatusUpdate(String status, String requestId) {
+        this.status = status;
+        this.requestId = requestId;
+    }
+
+    // Getters and Setters
+}
+
+package com.chase.ccb.mlio.insights.model;
+
+public class CallbackPayload {
+    private String message;
+    // Add other fields if needed
+
+    // Getters and Setters
+}
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-websocket</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.webjars</groupId>
+    <artifactId>sockjs-client</artifactId>
+    <version>1.5.1</version>
+</dependency>
+<dependency>
+    <groupId>org.webjars</groupId>
+    <artifactId>stomp-websocket</artifactId>
+    <version>2.3.4</version>
+</dependency>
