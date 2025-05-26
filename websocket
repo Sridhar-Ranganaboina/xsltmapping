@@ -1,0 +1,64 @@
+# Callback state storage in Redis (Python using FastAPI & Redis + WebSocket)
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from pydantic import BaseModel
+import redis
+import uuid
+import json
+
+app = FastAPI()
+
+# Redis setup
+r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+
+# In-memory store for active WebSocket connections (keyed by request_id)
+active_connections = {}
+
+class CallbackPayload(BaseModel):
+    request_id: str
+    status: str
+    result: dict
+
+# WebSocket endpoint
+@app.websocket("/ws/{request_id}")
+async def websocket_endpoint(websocket: WebSocket, request_id: str):
+    await websocket.accept()
+    active_connections[request_id] = websocket
+    try:
+        while True:
+            # Just receive any ping/pong or dummy data to keep connection alive
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        del active_connections[request_id]
+
+# Callback endpoint from Perceptron
+@app.post("/callback")
+async def receive_callback(payload: CallbackPayload):
+    # Store callback in Redis
+    r.setex(f"callback:{payload.request_id}", 3600, json.dumps(payload.dict()))
+
+    # Send message to UI if WebSocket connection is active
+    ws = active_connections.get(payload.request_id)
+    if ws:
+        await ws.send_json(payload.dict())
+
+    return {"message": "Callback received"}
+
+# REST to query status manually (optional fallback)
+@app.get("/status/{request_id}")
+def get_status(request_id: str):
+    data = r.get(f"callback:{request_id}")
+    if not data:
+        return {"status": "pending or expired"}
+    return json.loads(data)
+
+# Request initiator
+@app.post("/initiate-request")
+def initiate_request():
+    request_id = str(uuid.uuid4())
+    r.setex(f"callback:{request_id}", 3600, json.dumps({"status": "pending"}))
+    return {
+        "request_id": request_id,
+        "callback_url": f"https://your-service.com/callback",
+        "websocket_url": f"wss://your-service.com/ws/{request_id}"
+    }
