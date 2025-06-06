@@ -1,81 +1,45 @@
-package com.chase.ccb.mlio.insights.config;
+function getDateRangeFromOption(option: string): { startDate: string; endDate: string } {
+    const today = new Date();
+    let startDate: Date;
+    let endDate: Date = today;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.*;
-
-@Configuration
-@EnableWebSocketMessageBroker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic");
-        config.setApplicationDestinationPrefixes("/app");
+    switch (option) {
+        case 'Last 7 days':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 6); // includes today as day 1
+            break;
+        case 'Last 14 days':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 13);
+            break;
+        case 'Last 30 days':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 29);
+            break;
+        case 'Last 60 days':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 59);
+            break;
+        case 'Last 90 days':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 89);
+            break;
+        default:
+            // fallback to today for both if option unrecognized
+            startDate = today;
+            break;
     }
 
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
-    }
+    // Format dates as MM/DD/YYYY
+    const formatDate = (date: Date): string => {
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${mm}/${dd}/${yyyy}`;
+    };
+
+    return {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+    };
 }
-
-package com.chase.ccb.mlio.insights.controller;
-
-import com.chase.ccb.mlio.insights.model.StatusUpdate;
-import com.chase.ccb.mlio.insights.model.CallbackPayload;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-@RestController
-@RequestMapping("/perceptron-callback")
-public class CallbackController {
-
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-
-    @PostMapping("/{requestId}")
-    public ResponseEntity<Void> receiveCallback(@PathVariable String requestId, @RequestBody CallbackPayload payload) {
-        messagingTemplate.convertAndSend("/topic/status/" + requestId, new StatusUpdate("COMPLETED", requestId));
-        return ResponseEntity.ok().build();
-    }
-}
-
-package com.chase.ccb.mlio.insights.model;
-
-public class StatusUpdate {
-    private String status;
-    private String requestId;
-
-    public StatusUpdate(String status, String requestId) {
-        this.status = status;
-        this.requestId = requestId;
-    }
-
-    // Getters and Setters
-}
-
-package com.chase.ccb.mlio.insights.model;
-
-public class CallbackPayload {
-    private String message;
-    // Add other fields if needed
-
-    // Getters and Setters
-}
-
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-websocket</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.webjars</groupId>
-    <artifactId>sockjs-client</artifactId>
-    <version>1.5.1</version>
-</dependency>
-<dependency>
-    <groupId>org.webjars</groupId>
-    <artifactId>stomp-websocket</artifactId>
-    <version>2.3.4</version>
-</dependency>
