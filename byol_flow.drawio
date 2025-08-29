@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram name="byol_flow">
+flowchart LR
+    A[User Query] --&gt; B[Perceptron RAG Engine]
+    B --&gt; C[Initial Response]
+    C --&gt; D[User Feedback]
+    D --&gt; E[Refinement via LLM]
+    E --&gt; B
+</diagram>
+</mxfile>

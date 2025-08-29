@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram name="architecture">
+graph TD
+    UI[React UI] --&gt; API[Backend API]
+    API --&gt; Perceptron[RAG Engine]
+    Perceptron --&gt; OpenSearch[OpenSearch Vector DB]
+    Perceptron --&gt; DynamoDB[Call Metadata + Summaries]
+    Perceptron --&gt; LLM[LLM for Query Refinement]
+    UI &lt;--&gt;|Filters + Results| API
+</diagram>
+</mxfile>

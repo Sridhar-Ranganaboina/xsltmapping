@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram name="filter_flow">
+sequenceDiagram
+    participant User
+    participant UI as React UI
+    participant API as Backend API
+    participant Perceptron as RAG Engine
+    participant DynamoDB
+    participant OpenSearch
+
+    User-&gt;&gt;UI: Apply Filters
+    UI-&gt;&gt;API: Send Filter Request
+    API-&gt;&gt;Perceptron: Query with Filters
+    Perceptron-&gt;&gt;DynamoDB: Fetch Metadata
+    Perceptron-&gt;&gt;OpenSearch: Vector Search
+    OpenSearch--&gt;&gt;Perceptron: Results
+    DynamoDB--&gt;&gt;Perceptron: Metadata
+    Perceptron--&gt;&gt;API: Filtered Results
+    API--&gt;&gt;UI: Display Results
+</diagram>
+</mxfile>

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram name="user_mgmt">
+graph TD
+    Admin[Admin User] --&gt; UI[React UI]
+    UI --&gt; API[Backend API]
+    API --&gt; DynamoDB[User Table]
+    API --&gt; Auth[Authentication Service]
+</diagram>
+</mxfile>

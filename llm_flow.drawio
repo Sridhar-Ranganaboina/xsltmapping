@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram name="llm_flow">
+sequenceDiagram
+    participant User
+    participant UI
+    participant API
+    participant Perceptron
+    participant LLM
+
+    User-&gt;&gt;UI: Enter Query
+    UI-&gt;&gt;API: Send Query
+    API-&gt;&gt;Perceptron: Forward Query
+    Perceptron-&gt;&gt;LLM: Refine Query
+    LLM--&gt;&gt;Perceptron: Refined Query
+    Perceptron-&gt;&gt;API: Best Matches
+    API--&gt;&gt;UI: Show Answer
+</diagram>
+</mxfile>
