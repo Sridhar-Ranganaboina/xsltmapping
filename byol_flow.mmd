@@ -1,0 +1,14 @@
+
+sequenceDiagram
+    participant User
+    participant UI
+    participant S3c as Middleware: S3Controller
+    participant S3 as S3 Bucket
+    participant API as Backend
+
+    User->>UI: Select BYOL file
+    UI->>S3c: POST /fileupload (multipart)
+    S3c->>S3: PutObject
+    S3-->>S3c: URN (s3://bucket/key)
+    S3c->>API: Send URN for processing
+    S3c-->>UI: 202 Accepted + requestId

@@ -1,0 +1,35 @@
+
+flowchart LR
+    U[User] --> UI[ReactJS UI]
+    UI --> MW[Spring Boot Middleware]
+
+    subgraph Middleware
+        Audit[AuditController]
+        Filters[FiltersController]
+        LLMc[LLMController]
+        S3c[S3Controller]
+        Torq[TorqueAIController]
+        DDB[(DynamoDB)]
+    end
+
+    subgraph Backend
+        API[Spring Boot Backend APIs<br/>(/byol, /meta-filter, /rag)]
+        OS[OpenSearch]
+        LLM[LLM Service]
+    end
+
+    MW --> Audit
+    MW --> Filters
+    MW --> LLMc
+    MW --> S3c
+    MW --> Torq
+    Filters <--> API
+    LLMc <--> API
+
+    S3c --> S3[(S3 Bucket)]
+    API --> OS
+    API --> LLM
+
+    API -->|Callback (filters & LLM)| MW
+    MW --> DDB
+    UI -->|Poll /poll| MW

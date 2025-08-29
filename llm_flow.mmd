@@ -1,0 +1,22 @@
+
+sequenceDiagram
+    participant User
+    participant UI
+    participant LLMc as Middleware: LLMController
+    participant RAG as Backend: /rag
+    participant OS as OpenSearch (temp index)
+    participant LLM as LLM Service
+    participant DDB as DynamoDB
+
+    User->>UI: Enter prompt & submit
+    UI->>LLMc: POST /postLlmQuery
+    LLMc->>RAG: Forward request (includes tmpVectorIndex ref)
+    RAG->>OS: Vector search over tmp index
+    RAG->>LLM: Prompt with retrieved context
+    LLM-->>RAG: LLM answer
+    RAG-->>LLMc: Callback {requestId, answer}
+    LLMc->>DDB: Upsert {requestId, status=completed, answer}
+    UI->>LLMc: GET /poll?requestId=...
+    LLMc->>DDB: Read status/answer
+    DDB-->>LLMc: Completed
+    LLMc-->>UI: Return answer → render

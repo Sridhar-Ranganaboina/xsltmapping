@@ -1,0 +1,19 @@
+
+sequenceDiagram
+    participant User
+    participant UI
+    participant Filters as Middleware: FiltersController
+    participant API as Backend: /byol or /meta-filter
+    participant OS as OpenSearch
+    participant DDB as DynamoDB
+
+    User->>UI: Choose filter criteria
+    UI->>Filters: POST /handleFilters
+    Filters->>API: Forward filter request
+    API->>OS: Apply filters, build temp index
+    API-->>Filters: Callback {requestId, totals, sampleSize...}
+    Filters->>DDB: Upsert {requestId, status, metrics}
+    UI->>Filters: GET /poll?requestId=...
+    Filters->>DDB: Read status/result
+    DDB-->>Filters: Completed data
+    Filters-->>UI: Return result → update UI

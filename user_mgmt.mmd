@@ -1,0 +1,10 @@
+
+sequenceDiagram
+    participant UI
+    participant Torq as Middleware: TorqueAIController
+
+    UI->>Torq: GET /me
+    Torq-->>UI: User details (monetaUser)
+
+    UI->>Torq: POST /signout
+    Torq-->>UI: 204 No Content
