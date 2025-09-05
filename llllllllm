@@ -1,0 +1,48 @@
+# app/llm.py
+import certifi
+import ssl
+import httpx
+from typing import Optional
+from .settings import settings
+
+try:
+    from langchain_openai import AzureChatOpenAI
+except Exception:
+    AzureChatOpenAI = None
+
+
+def build_chat_llm(
+    azure_token: Optional[str] = None,
+    azure_endpoint: Optional[str] = None,
+    model_api_version: Optional[str] = None,
+    deployment_name: Optional[str] = None,
+    openai_api_key: Optional[str] = None,
+):
+    """
+    Build a LangChain AzureChatOpenAI with Bearer token support.
+    This will call the Azure OpenAI API using the provided token.
+    """
+
+    if AzureChatOpenAI is None:
+        raise RuntimeError("langchain_openai not installed; please add it to dependencies")
+
+    # Use certifi bundle for SSL
+    ca_certs = certifi.where()
+    ssl_context = ssl.create_default_context(cafile=ca_certs)
+
+    http_client = httpx.Client(verify=ssl_context)
+
+    return AzureChatOpenAI(
+        azure_endpoint=azure_endpoint or getattr(settings, "openai_api_base", None),
+        openai_api_version=model_api_version or getattr(settings, "openai_api_version", None),
+        deployment_name=deployment_name or getattr(settings, "openai_deployment", None),
+        openai_api_key=openai_api_key or getattr(settings, "openai_api_key", "unused"),
+        openai_api_type="azure",
+        max_retries=0,
+        temperature=0,
+        max_tokens=300,
+        http_client=http_client,
+        default_headers={
+            "Authorization": f"Bearer {azure_token}"
+        } if azure_token else None,
+    )
